@@ -671,25 +671,22 @@ public class ReferenceManager {
         }
     }
 
-    public Track<StrandedSequence> getTrackByMotif(final MotifTrackQuery trackQuery) {
-        return createStubTrack(trackQuery);
-    }
-
-    private Track<StrandedSequence> createStubTrack(MotifTrackQuery trackQuery) {
-        Track<StrandedSequence> track = new Track<>();
-        track.setId(trackQuery.getId());
-        track.setChromosome(getStubChromosome(trackQuery.getChromosomeId()));
-        track.setStartIndex(trackQuery.getStartIndex());
-        track.setEndIndex(trackQuery.getEndIndex());
-        track.setBlocks(fillSequenceList(trackQuery.getStartIndex(), trackQuery.getEndIndex()));
+    public Track<StrandedSequence> fillTrackWithMotifSearch(final Track<StrandedSequence> track, String motif) {
+        track.setBlocks(fillSequenceList(motif, track.getStartIndex(), track.getEndIndex()));
         return track;
     }
 
     private Chromosome getStubChromosome(Long chromosomeId) {
-        return referenceGenomeManager.loadChromosome(chromosomeId);
+        Chromosome chr;
+        try {
+            chr = referenceGenomeManager.loadChromosome(chromosomeId);
+        } catch (Exception e) {
+            chr = new Chromosome(chromosomeId);
+        }
+        return chr;
     }
 
-    private List<StrandedSequence> fillSequenceList(int trackStart, int trackEnd) {
+    private List<StrandedSequence> fillSequenceList(String motif, int trackStart, int trackEnd) {
         int start = trackStart;
         int end = (trackEnd == 0 ? 100 : trackEnd / 2);
         List<StrandedSequence> sequenceList = new ArrayList<>();

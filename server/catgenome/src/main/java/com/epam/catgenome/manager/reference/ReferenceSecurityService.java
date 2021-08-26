@@ -35,7 +35,6 @@ import com.epam.catgenome.entity.reference.Species;
 import com.epam.catgenome.entity.reference.StrandedSequence;
 import com.epam.catgenome.entity.reference.motif.MotifSearchRequest;
 import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
-import com.epam.catgenome.entity.reference.motif.MotifTrackQuery;
 import com.epam.catgenome.entity.track.Track;
 import com.epam.catgenome.exception.FeatureIndexException;
 import com.epam.catgenome.exception.ReferenceReadingException;
@@ -151,8 +150,8 @@ public class ReferenceSecurityService {
     }
 
     @PreAuthorize(ROLE_USER)
-    public Track<StrandedSequence> getTrackByMotif(MotifTrackQuery trackQuery) {
-        return referenceManager.getTrackByMotif(trackQuery);
+    public Track<StrandedSequence> fillTrackWithMotifSearch(Track<StrandedSequence> track, String motif) {
+        return referenceManager.fillTrackWithMotifSearch(track, motif);
     }
 
     @PreAuthorize(ROLE_USER)
