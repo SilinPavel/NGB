@@ -727,11 +727,11 @@ public class ReferenceManager {
         int end = (trackEnd == 0 ? 100 : trackEnd / 2);
         List<Motif> motifList = new ArrayList<>();
         Motif motif1 = new Motif("chr6", start, end,
-                false, generateString(end - start));
+                StrandSerializable.POSITIVE, generateString(end - start));
         start += end;
         end += end;
         Motif motif2 = new Motif("chr6", start, end,
-                false, generateString(end - start));
+                StrandSerializable.NEGATIVE, generateString(end - start));
         motifList.add(motif1);
         motifList.add(motif2);
         return motifList;
