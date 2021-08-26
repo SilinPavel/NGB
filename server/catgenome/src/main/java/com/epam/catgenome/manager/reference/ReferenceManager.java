@@ -677,11 +677,6 @@ public class ReferenceManager {
 
     public Track<StrandedSequence> getTrackByMotif(final MotifTrackQuery trackQuery) {
         return createStubTrack();
-//        final Chromosome chr = referenceGenomeManager.loadChromosome(trackQuery.getChromosomeId());
-//        if (chr != null && checkIndexes(trackQuery.getStartIndex(), trackQuery.getEndIndex())) {
-//            return  createTrackBySearchByTrackQuery(chr, trackQuery);
-//        }
-//        return new Track<>();
     }
 
     private Track<StrandedSequence> createStubTrack() {
@@ -704,32 +699,8 @@ public class ReferenceManager {
         return track;
     }
 
-    private boolean checkIndexes(Integer startIndex, Integer endIndex) {
-        return startIndex == 0 || endIndex == 0 || startIndex < endIndex;
-    }
-
-    private Track<StrandedSequence> createTrackBySearchByTrackQuery(
-            final Chromosome chr,
-            final MotifTrackQuery trackQuery) {
-        Track<StrandedSequence> track = new Track<>();
-        track.setId(trackQuery.getId());
-        track.setChromosome(chr);
-        track.setStartIndex(trackQuery.getStartIndex());
-        track.setEndIndex(trackQuery.getEndIndex());
-        track.setBlocks(makeSearchByTrackQuery(trackQuery));
-        return track;
-    }
-
-    private List<StrandedSequence> makeSearchByTrackQuery(final MotifTrackQuery trackQuery) {
-        return new ArrayList<>();
-    }
-
     public MotifSearchResult getMotifSearchResultByRequest(final MotifSearchRequest motifSearchRequest) {
         return createStubMotifSearchResult();
-//        if (referenceGenomeManager.isRegistered(motifSearchRequest.getReferenceId())) {
-//            return createMotifSearchResult(motifSearchRequest);
-//        }
-//        return MotifSearchResult.builder().build();
     }
 
     private MotifSearchResult createStubMotifSearchResult() {
@@ -746,16 +717,4 @@ public class ReferenceManager {
                 .build();
     }
 
-    private MotifSearchResult createMotifSearchResult(final MotifSearchRequest motifSearchRequest) {
-        return MotifSearchResult.builder()
-                .result(makeSearchByMotifSearchRequest(motifSearchRequest))
-                .chr(motifSearchRequest.getChromosome())
-                .pageSize(motifSearchRequest.getPageSize())
-                .position(motifSearchRequest.getEndPosition())
-                .build();
-    }
-
-    private List<Motif> makeSearchByMotifSearchRequest(final MotifSearchRequest motifSearchRequest) {
-        return new ArrayList<>();
-    }
 }
