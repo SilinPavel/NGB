@@ -37,6 +37,6 @@ public class MotifSearchRequest {
     String chromosome;
     Integer startPosition;
     Integer endPosition;
-    Long pageSize;
+    Integer pageSize;
 
 }

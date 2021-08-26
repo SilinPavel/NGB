@@ -35,5 +35,5 @@ public class MotifSearchResult {
     List<Motif> result;
     String chr;
     Integer position;
-    Long pageSize;
+    Integer pageSize;
 }

@@ -35,4 +35,8 @@ public class Motif extends Interval {
     }
 
     private String value;
+
+    public String getValue() {
+        return value;
+    }
 }

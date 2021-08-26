@@ -31,12 +31,7 @@ import com.epam.catgenome.controller.vo.registration.FeatureIndexedFileRegistrat
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.epam.catgenome.entity.BiologicalDataItem;
 import com.epam.catgenome.entity.BiologicalDataItemFormat;
@@ -57,6 +52,7 @@ import com.epam.catgenome.exception.RegistrationException;
 import com.epam.catgenome.manager.AuthManager;
 import com.epam.catgenome.manager.BiologicalDataItemManager;
 import com.epam.catgenome.manager.genbank.GenbankManager;
+import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import com.epam.catgenome.manager.reference.io.FastaSequenceFile;
 import com.epam.catgenome.manager.reference.io.FastaUtils;
 import com.epam.catgenome.manager.genbank.GenbankUtils;
@@ -676,45 +672,83 @@ public class ReferenceManager {
     }
 
     public Track<StrandedSequence> getTrackByMotif(final MotifTrackQuery trackQuery) {
-        return createStubTrack();
+        return createStubTrack(trackQuery);
     }
 
-    private Track<StrandedSequence> createStubTrack() {
+    private Track<StrandedSequence> createStubTrack(MotifTrackQuery trackQuery) {
         Track<StrandedSequence> track = new Track<>();
-        track.setId(1L);
-        track.setChromosome(new Chromosome());
-        track.setStartIndex(1);
-        track.setEndIndex(1000);
-        List<StrandedSequence> sequenceList = new ArrayList<>();
-        StrandedSequence sequence1 = new StrandedSequence();
-        sequence1.setText("sequence 1");
-        StrandedSequence sequence2 = new StrandedSequence();
-        sequence2.setText("sequence 2");
-        StrandedSequence sequence3 = new StrandedSequence();
-        sequence3.setText("sequence 3");
-        sequenceList.add(sequence1);
-        sequenceList.add(sequence2);
-        sequenceList.add(sequence3);
-        track.setBlocks(sequenceList);
+        track.setId(trackQuery.getId());
+        track.setChromosome(getStubChromosome(trackQuery.getChromosomeId()));
+        track.setStartIndex(trackQuery.getStartIndex());
+        track.setEndIndex(trackQuery.getEndIndex());
+        track.setBlocks(fillSequenceList(trackQuery.getStartIndex(), trackQuery.getEndIndex()));
         return track;
     }
 
-    public MotifSearchResult getMotifSearchResultByRequest(final MotifSearchRequest motifSearchRequest) {
-        return createStubMotifSearchResult();
+    private Chromosome getStubChromosome(Long chromosomeId) {
+        return referenceGenomeManager.loadChromosome(chromosomeId);
     }
 
-    private MotifSearchResult createStubMotifSearchResult() {
-        List<Motif> motifList = new ArrayList<>();
-        motifList.add(new Motif("contig 1", 1, 100, false, "value 1"));
-        motifList.add(new Motif("contig 2", 101, 200, false, "value 2"));
-        motifList.add(new Motif("contig 3", 201, 300, true, "value 3"));
-        motifList.add(new Motif("contig 4", 301, 400, true, "value 4"));
+    private List<StrandedSequence> fillSequenceList(int trackStart, int trackEnd) {
+        int start = trackStart;
+        int end = (trackEnd == 0 ? 100 : trackEnd / 2);
+        List<StrandedSequence> sequenceList = new ArrayList<>();
+        StrandedSequence sequence1 = new StrandedSequence();
+        sequence1.setText(generateString(end - start));
+        sequence1.setStartIndex(start);
+        sequence1.setEndIndex(end);
+        sequence1.setStrand(StrandSerializable.POSITIVE);
+        sequence1.setContentGC(1.8f);
+        sequenceList.add(sequence1);
+        start += end;
+        end += end;
+        StrandedSequence sequence2 = new StrandedSequence();
+        sequence2.setText(generateString(end - start));
+        sequence2.setStartIndex(start);
+        sequence2.setEndIndex(end);
+        sequence2.setStrand(StrandSerializable.POSITIVE);
+        sequence2.setContentGC(2.2f);
+        sequenceList.add(sequence2);
+        return sequenceList;
+    }
+
+    public MotifSearchResult getMotifSearchResultByRequest(final MotifSearchRequest motifSearchRequest) {
+        return createStubMotifSearchResult(motifSearchRequest);
+    }
+
+    private MotifSearchResult createStubMotifSearchResult(final MotifSearchRequest motifSearchRequest) {
         return MotifSearchResult.builder()
-                .result(motifList)
-                .chr("chr 1")
-                .pageSize(120L)
-                .position(42)
+                .result(fillMotifList(motifSearchRequest.getStartPosition(), motifSearchRequest.getEndPosition()))
+                .chr(getStubChromosome(Long.getLong(motifSearchRequest.getChromosome())).getName())
+                .pageSize(motifSearchRequest.getPageSize())
+                .position(motifSearchRequest.getEndPosition())
                 .build();
+    }
+
+    private List<Motif> fillMotifList(int trackStart, int trackEnd) {
+        int start = trackStart;
+        int end = (trackEnd == 0 ? 100 : trackEnd / 2);
+        List<Motif> motifList = new ArrayList<>();
+        Motif motif1 = new Motif("chr6", start, end,
+                false, generateString(end - start));
+        start += end;
+        end += end;
+        Motif motif2 = new Motif("chr6", start, end,
+                false, generateString(end - start));
+        motifList.add(motif1);
+        motifList.add(motif2);
+        return motifList;
+    }
+
+    private String generateString(int trackLength) {
+        String characters = "ATCG";
+        Random rng = new java.util.Random();
+        int length = rng.nextInt(trackLength);
+        char[] text = new char[length];
+        for (int i = 0; i < length; i++) {
+            text[i] = characters.charAt(rng.nextInt(characters.length()));
+        }
+        return new String(text);
     }
 
 }

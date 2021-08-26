@@ -389,13 +389,13 @@ public class ReferenceController extends AbstractRESTController {
     @RequestMapping(value = "/reference/motif", method = RequestMethod.POST)
     @ResponseBody
     @ApiOperation(
-            value = "Returns a track containing a list of positions of matches found",
+            value = "Returns a track containing a list of StrandedSequence that contains positions, sequence and strand",
             notes = "Returns information about matches found at the specified motif",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(
             value = {@ApiResponse(code = HTTP_STATUS_OK, message = API_STATUS_DESCRIPTION)
             })
-    public Result<Track<StrandedSequence>> searchTrackByMotif(
+    public Result<Track<StrandedSequence>> loadMotifTrack(
             @RequestBody MotifTrackQuery trackQuery) {
         return Result.success(referenceSecurityService.getTrackByMotif(trackQuery));
     }
@@ -403,13 +403,13 @@ public class ReferenceController extends AbstractRESTController {
     @RequestMapping(value = "/reference/motif/table", method = RequestMethod.POST)
     @ResponseBody
     @ApiOperation(
-            value = "Returns a table containing a list of objects containing positions of matches found",
+            value = "Returns a table containing a list of motifs found",
             notes = "Returns table with information about matches found at the specified motif",
             produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiResponses(
             value = {@ApiResponse(code = HTTP_STATUS_OK, message = API_STATUS_DESCRIPTION)
             })
-    public Result<MotifSearchResult> searchTableByMotif(
+    public Result<MotifSearchResult> loadMotifTable(
             @RequestBody MotifSearchRequest motifSearchRequest) {
         return Result.success(referenceSecurityService.getTableByMotif(motifSearchRequest));
     }
