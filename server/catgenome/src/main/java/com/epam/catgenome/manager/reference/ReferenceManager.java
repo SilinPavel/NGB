@@ -31,7 +31,15 @@ import com.epam.catgenome.controller.vo.registration.FeatureIndexedFileRegistrat
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.epam.catgenome.entity.BiologicalDataItem;
 import com.epam.catgenome.entity.BiologicalDataItemFormat;
@@ -43,7 +51,7 @@ import com.epam.catgenome.entity.reference.StrandedSequence;
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.entity.reference.motif.MotifSearchRequest;
 import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
-import com.epam.catgenome.entity.reference.motif.MotifTrackQuery;
+import com.epam.catgenome.entity.reference.motif.MotifSearchType;
 import com.epam.catgenome.entity.track.ReferenceTrackMode;
 import com.epam.catgenome.exception.ExternalDbUnavailableException;
 import com.epam.catgenome.exception.Ga4ghResourceUnavailableException;
@@ -671,70 +679,74 @@ public class ReferenceManager {
         }
     }
 
-    public Track<StrandedSequence> fillTrackWithMotifSearch(final Track<StrandedSequence> track, String motif) {
-        track.setBlocks(fillSequenceList(motif, track.getStartIndex(), track.getEndIndex()));
+    public Track<StrandedSequence> fillTrackWithMotifSearch(final Track<StrandedSequence> track,
+                                                            final String motif) {
+        verifyInputTrackAndMotif(track, motif);
+        final List<StrandedSequence> result = createMotifSearchResult(MotifSearchRequest.builder()
+                .motif(motif)
+                .searchType(MotifSearchType.REGION)
+                .chromosome(track.getChromosome().getName())
+                .startPosition(track.getStartIndex())
+                .endPosition(track.getEndIndex())
+                .referenceId(track.getId())
+                .pageSize(Integer.MAX_VALUE)
+                .build()).getResult().stream()
+                .map(m -> new StrandedSequence(m.getStart(), m.getEnd(), m.getValue(), m.getStrand()))
+                .collect(Collectors.toList());
+        track.setBlocks(result);
         return track;
     }
 
-    private Chromosome getStubChromosome(Long chromosomeId) {
-        Chromosome chr;
-        try {
-            chr = referenceGenomeManager.loadChromosome(chromosomeId);
-        } catch (Exception e) {
-            chr = new Chromosome(chromosomeId);
+    private void verifyInputTrackAndMotif(final Track<StrandedSequence> track, final String motif) {
+        Assert.notNull(motif, getMessage("Motif is empty!"));
+        Assert.notNull(track.getChromosome(), getMessage("Chromosome not found!"));
+        Assert.notNull(track.getStartIndex(), getMessage("Start index is empty!"));
+        if (track.getEndIndex() != null) {
+            Assert.isTrue(track.getEndIndex() - track.getStartIndex() > 0,
+                    getMessage("Wrong indexes!"));
         }
-        return chr;
-    }
-
-    private List<StrandedSequence> fillSequenceList(String motif, int trackStart, int trackEnd) {
-        int start = trackStart;
-        int end = (trackEnd == 0 ? 100 : trackEnd / 2);
-        List<StrandedSequence> sequenceList = new ArrayList<>();
-        StrandedSequence sequence1 = new StrandedSequence();
-        sequence1.setText(generateString(end - start));
-        sequence1.setStartIndex(start);
-        sequence1.setEndIndex(end);
-        sequence1.setStrand(StrandSerializable.POSITIVE);
-        sequence1.setContentGC(1.8f);
-        sequenceList.add(sequence1);
-        start += end;
-        end += end;
-        StrandedSequence sequence2 = new StrandedSequence();
-        sequence2.setText(generateString(end - start));
-        sequence2.setStartIndex(start);
-        sequence2.setEndIndex(end);
-        sequence2.setStrand(StrandSerializable.POSITIVE);
-        sequence2.setContentGC(2.2f);
-        sequenceList.add(sequence2);
-        return sequenceList;
     }
 
     public MotifSearchResult getMotifSearchResultByRequest(final MotifSearchRequest motifSearchRequest) {
-        return createStubMotifSearchResult(motifSearchRequest);
+        return createMotifSearchResult(motifSearchRequest);
     }
 
-    private MotifSearchResult createStubMotifSearchResult(final MotifSearchRequest motifSearchRequest) {
+    private MotifSearchResult createMotifSearchResult(final MotifSearchRequest motifSearchRequest) {
+        verifyMotifSearchRequest(motifSearchRequest);
         return MotifSearchResult.builder()
-                .result(fillMotifList(motifSearchRequest.getStartPosition(), motifSearchRequest.getEndPosition()))
-                .chr(getStubChromosome(Long.getLong(motifSearchRequest.getChromosome())).getName())
+                .result(fillMotifList(motifSearchRequest.getStartPosition(),
+                        motifSearchRequest.getEndPosition()))
+                .chr(motifSearchRequest.getChromosome())
                 .pageSize(motifSearchRequest.getPageSize())
                 .position(motifSearchRequest.getEndPosition())
                 .build();
     }
 
-    private List<Motif> fillMotifList(int trackStart, int trackEnd) {
-        int start = trackStart;
-        int end = (trackEnd == 0 ? 100 : trackEnd / 2);
-        List<Motif> motifList = new ArrayList<>();
-        Motif motif1 = new Motif("chr6", start, end,
-                StrandSerializable.POSITIVE, generateString(end - start));
-        start += end;
-        end += end;
-        Motif motif2 = new Motif("chr6", start, end,
-                StrandSerializable.NEGATIVE, generateString(end - start));
-        motifList.add(motif1);
-        motifList.add(motif2);
-        return motifList;
+    private void verifyMotifSearchRequest(final MotifSearchRequest motifSearchRequest) {
+        Assert.notNull(motifSearchRequest.getMotif(), getMessage("Motif is empty!"));
+        final Integer start = motifSearchRequest.getStartPosition();
+        final Integer end = motifSearchRequest.getEndPosition();
+        final MotifSearchType searchType = motifSearchRequest.getSearchType();
+        if (searchType.equals(MotifSearchType.REGION)) {
+            Assert.notNull(start, getMessage("Start position is empty!"));
+            Assert.notNull(end, getMessage("End position is empty!"));
+            Assert.isTrue(end - start > 0, getMessage("Wrong indexes!"));
+        } else if (searchType.equals(MotifSearchType.CHROMOSOME)) {
+            Assert.notNull(motifSearchRequest.getChromosome(), getMessage("Chromosome not found!"));
+            Assert.notNull(start, getMessage("Start position is empty!"));
+            if (end != null) {
+                Assert.isTrue(end - start > 0, getMessage("Wrong indexes!"));
+            }
+        }
+    }
+
+    private List<Motif> fillMotifList(final Integer trackStart, final Integer trackEnd) {
+        final int motifStart = trackStart == null ? 0 : trackStart;
+        final int motifEnd = trackEnd == null ? (motifStart + 100) / 2 : trackEnd / 2;
+        return Stream.of(motifStart, motifEnd)
+                .map(s -> new Motif("chr6", s, s + motifEnd,
+                        StrandSerializable.POSITIVE, generateString(motifEnd - motifStart)))
+                .collect(Collectors.toList());
     }
 
     private String generateString(int trackLength) {
