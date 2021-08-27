@@ -42,8 +42,8 @@ public class MotifSearchManager {
     }
 
     private List<StrandedSequence> fillStrandedSequenceList(final Integer trackStart, final Integer trackEnd,
-                                                            Long chromosomeId, final String motif) {
-        List<Motif> motifs = getMotifList(trackStart, trackEnd, motif, chromosomeId);
+                                                            final Long chromosomeId, final String motif) {
+        final List<Motif> motifs = getMotifList(trackStart, trackEnd, motif, chromosomeId);
         return motifs.stream()
                 .map(m -> new StrandedSequence(m.getStart(), m.getEnd(), m.getValue(), m.getStrand()))
                 .collect(Collectors.toList());
@@ -79,7 +79,7 @@ public class MotifSearchManager {
         throw new IllegalArgumentException();
     }
 
-    private MotifSearchResult searchRegionMotifs(MotifSearchRequest motifSearchRequest) {
+    private MotifSearchResult searchRegionMotifs(final MotifSearchRequest motifSearchRequest) {
         return MotifSearchResult.builder()
                 .result(fillMotifList(motifSearchRequest.getStartPosition(),
                         motifSearchRequest.getEndPosition(),
@@ -92,7 +92,7 @@ public class MotifSearchManager {
                 .build();
     }
 
-    private MotifSearchResult searchChromosomeMotifs(MotifSearchRequest motifSearchRequest) {
+    private MotifSearchResult searchChromosomeMotifs(final MotifSearchRequest motifSearchRequest) {
         return MotifSearchResult.builder()
                 .result(fillMotifList(motifSearchRequest.getStartPosition(),
                         motifSearchRequest.getEndPosition(),
@@ -105,7 +105,7 @@ public class MotifSearchManager {
                 .build();
     }
 
-    private MotifSearchResult searchWholeGenomeMotifs(MotifSearchRequest motifSearchRequest) {
+    private MotifSearchResult searchWholeGenomeMotifs(final MotifSearchRequest motifSearchRequest) {
         return searchChromosomeMotifs(motifSearchRequest);
     }
 
@@ -124,16 +124,17 @@ public class MotifSearchManager {
             if (end != null) {
                 Assert.isTrue(end - start > 0, getMessage("Wrong indexes!"));
             }
-        }else if (searchType.equals(MotifSearchType.WHOLE_GENOME)){
+        } else if (searchType.equals(MotifSearchType.WHOLE_GENOME)) {
             Assert.notNull(motifSearchRequest.getReferenceId(), getMessage("Genome id is empty!"));
         }
     }
 
     private List<Motif> fillMotifList(final Integer trackStart, final Integer trackEnd,
-                                      Integer pageSize, String motif, Long chromosomeId) {
-        List<Motif> motifs = new ArrayList<>();
+                                      final Integer pageSize, final String motif,
+                                      final Long chromosomeId) {
+        final List<Motif> motifs = new ArrayList<>();
         if (pageSize == 0 || pageSize < (trackEnd - trackStart)) {
-            motifs = getMotifList(trackStart, trackEnd, motif, chromosomeId);
+            motifs.addAll(getMotifList(trackStart, trackEnd, motif, chromosomeId));
         } else {
             int length = (trackEnd - trackStart) / pageSize + ((trackEnd - trackStart) % pageSize);
             int start = trackStart;
@@ -147,12 +148,13 @@ public class MotifSearchManager {
         return motifs;
     }
 
-    private List<Motif> getMotifList(Integer trackStart, Integer trackEnd,
-                                     String motif, Long chromosomeId) {
+    private List<Motif> getMotifList(final Integer trackStart, final Integer trackEnd,
+                                     final String motif, final Long chromosomeId) {
         return getStubMotifList(trackStart, trackEnd, chromosomeId);
     }
 
-    private List<Motif> getStubMotifList(Integer trackStart, Integer trackEnd, Long chromosomeId) {
+    private List<Motif> getStubMotifList(final Integer trackStart, final Integer trackEnd,
+                                         final Long chromosomeId) {
         String chrName;
         try {
             Chromosome chr = referenceGenomeManager.loadChromosome(chromosomeId);
