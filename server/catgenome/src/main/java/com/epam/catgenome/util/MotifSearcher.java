@@ -36,16 +36,18 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class MotifSearcher {
+public final class MotifSearcher {
+
+    private static final int NEGATIVE_STRAND = 1;
 
     private MotifSearcher() {}
 
-    public static List<Motif> getPartialResult(final String buf, final String regex, String contig) {
+    public static List<Motif> search(final String sequence, final String regex, String contig) {
 
-        final String negativeBuf = reverseAndComplement(buf);
+        final String negativeSequence = reverseAndComplement(sequence);
         final Pattern pattern = Pattern.compile(convertIupacToRegex(regex), Pattern.CASE_INSENSITIVE);
-        final Matcher positiveMatcher = pattern.matcher(buf);
-        final Matcher negativeMatcher = pattern.matcher(negativeBuf);
+        final Matcher positiveMatcher = pattern.matcher(sequence);
+        final Matcher negativeMatcher = pattern.matcher(negativeSequence);
 
         final MatchingIterator multiMatcher = new MatchingIterator(positiveMatcher, negativeMatcher);
         final List<Motif> motifList = new ArrayList<>();
@@ -53,10 +55,10 @@ public class MotifSearcher {
             final MatchingIterator.MatchingResult matchingResult = multiMatcher.next();
             final int start = matchingResult.getMatchingStartResult();
             final int end = matchingResult.getMatchingEndResult();
-            final boolean negative = matchingResult.getMatcherNumber() != 0;
+            final boolean negative = matchingResult.getMatcherNumber() == NEGATIVE_STRAND;
             final String value = negative
-                    ? negativeBuf.substring(start, end)
-                    : buf.substring(start, end);
+                    ? negativeSequence.substring(start, end)
+                    : sequence.substring(start, end);
             motifList.add(new Motif(contig, start, end, negative, value));
         }
         return motifList;
@@ -117,7 +119,7 @@ public class MotifSearcher {
     public static String convertIupacToRegex(final String regex) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < regex.length(); i++) {
-            result.append(IupacRegex.getRegexByIupacLetter(regex.substring(i,i+1)));
+            result.append(IupacRegex.getRegexByIupacLetter(regex.substring(i, i + 1)));
         }
         return result.toString();
     }

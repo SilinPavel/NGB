@@ -30,46 +30,46 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.NoSuchElementException;
 
 public class MatchingIterator implements Iterator<MatchingIterator.MatchingResult> {
 
-    private final List<CheckableMatcher> matchers;
+    private final List<PeekableMatcher> matchers;
 
     public MatchingIterator(final Matcher... matchers) {
         this.matchers = Arrays.stream(matchers)
-                .map(CheckableMatcher::new)
+                .map(PeekableMatcher::new)
                 .collect(Collectors.toList());
         enumerateMatchers(this.matchers);
     }
 
     @Override
     public boolean hasNext() {
-        return matchers.stream().anyMatch(CheckableMatcher::hasNext);
+        return matchers.stream().anyMatch(PeekableMatcher::hasNext);
     }
 
     @Override
     public MatchingResult next() {
-        final CheckableMatcher checkableMatcher = matchers.stream()
-                .filter(CheckableMatcher::hasNext)
-                .min(Comparator.comparing(CheckableMatcher::start))
-                .orElseThrow(()->new NoSuchElementException("\"next()\" invoked without invoking \"hasNext()\"!"));
-        checkableMatcher.find();
-        return new MatchingResult(checkableMatcher.matcherNumber,
-                checkableMatcher.start(),
-                checkableMatcher.end()
+        final PeekableMatcher peekableMatcher = matchers.stream()
+                .filter(PeekableMatcher::hasNext)
+                .min(Comparator.comparing(PeekableMatcher::start))
+                .orElseThrow(() -> new NoSuchElementException("\"next()\" invoked without invoking \"hasNext()\"!"));
+        peekableMatcher.find();
+        return new MatchingResult(peekableMatcher.matcherNumber,
+                peekableMatcher.start(),
+                peekableMatcher.end()
         );
     }
 
-    private void enumerateMatchers(final List<CheckableMatcher> matchers) {
-        AtomicInteger counter = new AtomicInteger(0);
-        matchers.forEach(m -> m.matcherNumber = counter.getAndIncrement());
+    private void enumerateMatchers(final List<PeekableMatcher> matchers) {
+        for (int i = 0; i < matchers.size(); i++) {
+            matchers.get(i).matcherNumber = i;
+        }
     }
 
-    private static class CheckableMatcher {
+    private static class PeekableMatcher {
 
         private final Matcher matcher;
         private boolean nextValueAvailable;
@@ -79,7 +79,7 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
 
 
 
-        public CheckableMatcher(final Matcher matcher) {
+        public PeekableMatcher(final Matcher matcher) {
             this.matcher = matcher;
         }
 
