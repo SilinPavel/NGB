@@ -59,6 +59,9 @@ public class ReferenceSecurityService {
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
 
+    @Autowired
+    private MotifSearchManager motifSearchManager;
+
     @AclMaskList
     @PreAuthorize(ROLE_USER)
     public List<Reference> loadAllReferenceGenomes(String referenceName) {
@@ -151,11 +154,11 @@ public class ReferenceSecurityService {
 
     @PreAuthorize(ROLE_USER)
     public Track<StrandedSequence> fillTrackWithMotifSearch(Track<StrandedSequence> track, String motif) {
-        return referenceManager.fillTrackWithMotifSearch(track, motif);
+        return motifSearchManager.fillTrackWithMotifSearch(track, motif);
     }
 
     @PreAuthorize(ROLE_USER)
     public MotifSearchResult getTableByMotif(MotifSearchRequest motifSearchRequest) {
-        return referenceManager.getMotifSearchResultByRequest(motifSearchRequest);
+        return motifSearchManager.getMotifSearchResultByRequest(motifSearchRequest);
     }
 }

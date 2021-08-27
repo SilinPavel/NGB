@@ -34,7 +34,7 @@ public class MotifSearchRequest {
     MotifSearchType searchType;
     String motif;
     Long referenceId;
-    String chromosome;
+    Long chromosomeId;
     Integer startPosition;
     Integer endPosition;
     Integer pageSize;
