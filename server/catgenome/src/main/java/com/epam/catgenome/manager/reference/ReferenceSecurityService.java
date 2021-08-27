@@ -159,6 +159,6 @@ public class ReferenceSecurityService {
 
     @PreAuthorize(ROLE_USER)
     public MotifSearchResult getTableByMotif(MotifSearchRequest motifSearchRequest) {
-        return motifSearchManager.getMotifSearchResultByRequest(motifSearchRequest);
+        return motifSearchManager.search(motifSearchRequest);
     }
 }
