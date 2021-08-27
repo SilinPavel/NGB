@@ -399,7 +399,7 @@ public class ReferenceController extends AbstractRESTController {
     public Result<Track<StrandedSequence>> loadMotifTrack(
             @RequestBody MotifTrackQuery trackQuery) {
         return Result.success(referenceSecurityService.fillTrackWithMotifSearch(convertToTrack(trackQuery),
-                trackQuery.getMotif()));
+                trackQuery.getMotif(), trackQuery.getStrand()));
     }
 
     @RequestMapping(value = "/reference/motif/table", method = RequestMethod.POST)

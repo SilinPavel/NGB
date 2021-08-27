@@ -25,6 +25,7 @@
 package com.epam.catgenome.entity.reference.motif;
 
 import com.epam.catgenome.controller.vo.TrackQuery;
+import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -33,5 +34,6 @@ import lombok.EqualsAndHashCode;
 public class MotifTrackQuery extends TrackQuery {
 
     private String motif;
+    StrandSerializable strand;
 
 }

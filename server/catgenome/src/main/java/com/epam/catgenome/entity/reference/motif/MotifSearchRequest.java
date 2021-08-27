@@ -24,6 +24,7 @@
 
 package com.epam.catgenome.entity.reference.motif;
 
+import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import lombok.Builder;
 import lombok.Value;
 
@@ -38,5 +39,6 @@ public class MotifSearchRequest {
     Integer startPosition;
     Integer endPosition;
     Integer pageSize;
+    StrandSerializable strand;
 
 }

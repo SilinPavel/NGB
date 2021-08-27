@@ -38,6 +38,7 @@ import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
 import com.epam.catgenome.entity.track.Track;
 import com.epam.catgenome.exception.FeatureIndexException;
 import com.epam.catgenome.exception.ReferenceReadingException;
+import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import com.epam.catgenome.security.acl.aspect.AclMask;
 import com.epam.catgenome.security.acl.aspect.AclMaskList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -153,8 +154,8 @@ public class ReferenceSecurityService {
     }
 
     @PreAuthorize(ROLE_USER)
-    public Track<StrandedSequence> fillTrackWithMotifSearch(Track<StrandedSequence> track, String motif) {
-        return motifSearchManager.fillTrackWithMotifSearch(track, motif);
+    public Track<StrandedSequence> fillTrackWithMotifSearch(Track<StrandedSequence> track, String motif, StrandSerializable strand) {
+        return motifSearchManager.fillTrackWithMotifSearch(track, motif, strand);
     }
 
     @PreAuthorize(ROLE_USER)
