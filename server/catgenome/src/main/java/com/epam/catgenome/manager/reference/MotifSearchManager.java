@@ -133,16 +133,16 @@ public class MotifSearchManager {
                                       final Integer pageSize, final String motif,
                                       final Long chromosomeId) {
         final List<Motif> motifs = new ArrayList<>();
-        if (pageSize == 0 || pageSize < (trackEnd - trackStart)) {
+        if (pageSize == 0 || pageSize > (trackEnd - trackStart)) {
             motifs.addAll(getMotifList(trackStart, trackEnd, motif, chromosomeId));
         } else {
-            int length = (trackEnd - trackStart) / pageSize + ((trackEnd - trackStart) % pageSize);
+            int pageCounts = ((trackEnd - trackStart) / pageSize) + 1;
             int start = trackStart;
-            int end = trackStart + length;
-            for (int i = 0; i < pageSize; i++) {
+            int end = trackStart + pageSize;
+            for (int i = 0; i < pageCounts; i++) {
                 motifs.addAll(getMotifList(start, end, motif, chromosomeId));
-                start += length;
-                end += length;
+                start += pageSize;
+                end += pageSize;
             }
         }
         return motifs;
