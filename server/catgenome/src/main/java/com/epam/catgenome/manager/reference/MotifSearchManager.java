@@ -34,8 +34,7 @@ public class MotifSearchManager {
 
     public Track<StrandedSequence> fillTrackWithMotifSearch(final Track<StrandedSequence> track,
                                                             final String motif) {
-        verifyInputTrackAndMotif(track, motif);
-        final List<StrandedSequence> result = searchRegionMotifs(MotifSearchRequest.builder()
+        final List<StrandedSequence> result = search(MotifSearchRequest.builder()
                 .startPosition(track.getStartIndex())
                 .endPosition(track.getEndIndex())
                 .chromosomeId(track.getChromosome().getId())
