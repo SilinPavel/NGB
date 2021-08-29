@@ -69,7 +69,7 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
         }
     }
 
-    private static class PeekableMatcher {
+    private static final class PeekableMatcher {
 
         private final Matcher matcher;
         private boolean nextValueAvailable;
@@ -79,11 +79,11 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
 
 
 
-        public PeekableMatcher(final Matcher matcher) {
+        private PeekableMatcher(final Matcher matcher) {
             this.matcher = matcher;
         }
 
-        public boolean hasNext() {
+        private boolean hasNext() {
             if (!hasNextInvoked) {
                 nextValueAvailable = matcher.find(currentPosition);
                 hasNextInvoked = true;
@@ -94,7 +94,7 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
             return nextValueAvailable;
         }
 
-        public boolean find() {
+        private boolean find() {
             if (!hasNextInvoked) {
                 throw new IllegalStateException("\"find()\" invoked without invoking \"hasNext()\"!");
             }
@@ -102,11 +102,11 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
             return nextValueAvailable;
         }
 
-        public int start() {
+        private int start() {
             return matcher.start();
         }
 
-        public int end() {
+        private int end() {
             return matcher.end();
         }
     }

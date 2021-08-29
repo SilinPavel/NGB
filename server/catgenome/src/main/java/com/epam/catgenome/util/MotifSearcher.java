@@ -27,41 +27,54 @@ package com.epam.catgenome.util;
 import com.epam.catgenome.component.MessageHelper;
 import com.epam.catgenome.constant.MessagesConstants;
 import com.epam.catgenome.entity.reference.motif.Motif;
-import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
+import java.util.Spliterators;
+import java.util.Spliterator;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public final class MotifSearcher {
 
     private static final int NEGATIVE_STRAND = 1;
+    private static final byte CAPITAL_A = 'A';
+    private static final byte CAPITAL_C = 'C';
+    private static final byte CAPITAL_G = 'G';
+    private static final byte CAPITAL_T = 'T';
+    private static final byte CAPITAL_N = 'N';
+    private static final byte LOWERCASE_A = 'a';
+    private static final byte LOWERCASE_C = 'c';
+    private static final byte LOWERCASE_G = 'g';
+    private static final byte LOWERCASE_T = 't';
+    private static final byte LOWERCASE_N = 'n';
 
     private MotifSearcher() {}
 
-    public static List<Motif> search(final String sequence, final String regex, String contig) {
+    public static List<Motif> search(final byte[] seq, final String regex, String contig) {
 
-        final String negativeSequence = reverseAndComplement(sequence);
+        final String sequence = new String(seq);
+        final String negativeSequence = reverseAndComplement(seq);
         final Pattern pattern = Pattern.compile(convertIupacToRegex(regex), Pattern.CASE_INSENSITIVE);
         final Matcher positiveMatcher = pattern.matcher(sequence);
         final Matcher negativeMatcher = pattern.matcher(negativeSequence);
 
-        final MatchingIterator multiMatcher = new MatchingIterator(positiveMatcher, negativeMatcher);
-        final List<Motif> motifList = new ArrayList<>();
-        while (multiMatcher.hasNext()) {
-            final MatchingIterator.MatchingResult matchingResult = multiMatcher.next();
-            final int start = matchingResult.getMatchingStartResult();
-            final int end = matchingResult.getMatchingEndResult();
-            final boolean negative = matchingResult.getMatcherNumber() == NEGATIVE_STRAND;
-            final String value = negative
-                    ? negativeSequence.substring(start, end)
-                    : sequence.substring(start, end);
-            motifList.add(new Motif(contig, start, end, negative, value));
-        }
-        return motifList;
+        return StreamSupport
+                .stream(Spliterators.spliteratorUnknownSize(new MatchingIterator(positiveMatcher, negativeMatcher),
+                                Spliterator.ORDERED), false)
+                .map(matchingResult -> {
+                    final int start = matchingResult.getMatchingStartResult();
+                    final int end = matchingResult.getMatchingEndResult();
+                    final boolean negative = matchingResult.getMatcherNumber() == NEGATIVE_STRAND;
+                    final String value = negative
+                            ? negativeSequence.substring(start, end)
+                            : sequence.substring(start, end);
+                    return new Motif(contig, start, end, negative, value);
+                })
+                .collect(Collectors.toList());
     }
 
     /**
@@ -70,13 +83,12 @@ public final class MotifSearcher {
      * @param sequence nucleotide sequence
      * @return reversed complement nucleotide sequence string
      */
-    private static String reverseAndComplement(final String sequence) {
-        final char[] chars = sequence.toCharArray();
-        final char[] complementChars = new char[chars.length];
-        for (int i = 0; i < chars.length; i++) {
-            complementChars[i] = complement(chars[i]);
+    private static String reverseAndComplement(final byte[] sequence) {
+        final byte[] reversedSequence = new byte[sequence.length];
+        for (int i = 0, j = sequence.length - 1; i < sequence.length; i++, j--) {
+            reversedSequence[i] = complement(sequence[j]);
         }
-        return StringUtils.reverse(new String(complementChars));
+        return new String(reversedSequence);
     }
 
     /**
@@ -85,29 +97,27 @@ public final class MotifSearcher {
      * @param nucleotide nucleotide
      * @return complement nucleotide
      */
-    private static char complement(final char nucleotide) {
-        char complement;
-        switch (Character.toUpperCase(nucleotide)) {
-            case 'A':
-                complement = 'T';
-                break;
-            case 'T':
-                complement = 'A';
-                break;
-            case 'G':
-                complement = 'C';
-                break;
-            case 'C':
-                complement = 'G';
-                break;
-            case 'N':
-                complement = 'N';
-                break;
+    public static byte complement(final byte nucleotide) {
+        switch (nucleotide) {
+            case CAPITAL_A:
+            case LOWERCASE_A:
+                return CAPITAL_T;
+            case CAPITAL_C:
+            case LOWERCASE_C:
+                return CAPITAL_G;
+            case CAPITAL_G:
+            case LOWERCASE_G:
+                return CAPITAL_C;
+            case CAPITAL_T:
+            case LOWERCASE_T:
+                return CAPITAL_A;
+            case CAPITAL_N:
+            case LOWERCASE_N:
+                return CAPITAL_N;
             default:
                 throw new IllegalArgumentException(MessageHelper.getMessage(MessagesConstants.ERROR_INVALID_NUCLEOTIDE,
                         nucleotide));
         }
-        return complement;
     }
 
     /**
