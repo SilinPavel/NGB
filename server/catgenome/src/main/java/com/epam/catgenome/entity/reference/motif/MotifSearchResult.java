@@ -32,8 +32,8 @@ import java.util.List;
 @Value
 @Builder
 public class MotifSearchResult {
+    Long chromosomeId;
     List<Motif> result;
-    String chr;
     Integer position;
     Integer pageSize;
 }
