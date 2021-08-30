@@ -27,6 +27,7 @@ package com.epam.catgenome.util;
 import com.epam.catgenome.component.MessageHelper;
 import com.epam.catgenome.constant.MessagesConstants;
 import com.epam.catgenome.entity.reference.motif.Motif;
+import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 
 import java.util.Spliterators;
 import java.util.Spliterator;
@@ -51,28 +52,51 @@ public final class MotifSearcher {
     private static final byte LOWERCASE_G = 'g';
     private static final byte LOWERCASE_T = 't';
     private static final byte LOWERCASE_N = 'n';
+    private static final String EMPTY_VALUE = "";
 
-    private MotifSearcher() {}
+    private MotifSearcher() {
+    }
 
-    public static List<Motif> search(final byte[] seq, final String regex, String contig) {
+    public static List<Motif> search(final byte[] seq, final String regex, final String contig) {
+        return search(seq, regex, null, contig);
+    }
 
-        final String sequence = new String(seq);
-        final String negativeSequence = reverseAndComplement(seq);
+    public static List<Motif> search(final byte[] seq, final String regex,
+                                     final StrandSerializable strand, final String contig) {
+        final String sequence;
+        final String negativeSequence;
+
+        if(strand == null) {
+            sequence = new String(seq);
+            negativeSequence = reverseAndComplement(seq);
+        } else if (strand == StrandSerializable.POSITIVE) {
+            sequence = new String(seq);
+            negativeSequence = EMPTY_VALUE;
+        } else if (strand == StrandSerializable.NEGATIVE) {
+            sequence = EMPTY_VALUE;
+            negativeSequence = reverseAndComplement(seq);
+        } else {
+            throw new IllegalArgumentException(MessageHelper.getMessage(MessagesConstants.ERROR_UNSUPPORTED_OPERATION,
+                    strand));
+        }
+
         final Pattern pattern = Pattern.compile(convertIupacToRegex(regex), Pattern.CASE_INSENSITIVE);
         final Matcher positiveMatcher = pattern.matcher(sequence);
         final Matcher negativeMatcher = pattern.matcher(negativeSequence);
 
         return StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(new MatchingIterator(positiveMatcher, negativeMatcher),
-                                Spliterator.ORDERED), false)
+                        Spliterator.ORDERED), false)
                 .map(matchingResult -> {
                     final int start = matchingResult.getMatchingStartResult();
                     final int end = matchingResult.getMatchingEndResult();
-                    final boolean negative = matchingResult.getMatcherNumber() == NEGATIVE_STRAND;
-                    final String value = negative
+                    final StrandSerializable currentStrand = matchingResult.getMatcherIndex() == NEGATIVE_STRAND
+                            ? StrandSerializable.NEGATIVE
+                            : StrandSerializable.POSITIVE;
+                    final String value = currentStrand == StrandSerializable.NEGATIVE
                             ? negativeSequence.substring(start, end)
                             : sequence.substring(start, end);
-                    return new Motif(contig, start, end, negative, value);
+                    return new Motif(contig, start, end, currentStrand, value);
                 })
                 .collect(Collectors.toList());
     }
@@ -135,8 +159,8 @@ public final class MotifSearcher {
     }
 
     /**
-     *IUPAC Ambiguity codes translated into regex, using java syntax
-     *Source: http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html
+     * IUPAC Ambiguity codes translated into regex, using java syntax
+     * Source: http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html
      */
     private enum IupacRegex {
 

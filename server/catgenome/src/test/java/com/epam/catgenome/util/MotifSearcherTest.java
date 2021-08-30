@@ -1,5 +1,6 @@
 package com.epam.catgenome.util;
 
+import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -19,9 +20,25 @@ public class MotifSearcherTest {
 
     @Test
     public void searchTest() {
-        byte[] testSequence = "cgCGattcGaaGGG".getBytes(StandardCharsets.UTF_8);
-        String testRegex = "cg";
-        Assert.assertEquals(6, MotifSearcher.search(testSequence, testRegex, "").size());
+        byte[] testSequence = "cgCGcattgcGcaaGGG".getBytes(StandardCharsets.UTF_8);
+        String testRegex = "ca";
+        Assert.assertEquals(3, MotifSearcher.search(testSequence, testRegex, "").size());
+    }
+
+    @Test
+    public void searchInPositiveStrandTest() {
+        byte[] testSequence = "cgCGcattgcGcaaGGG".getBytes(StandardCharsets.UTF_8);
+        String testRegex = "ca";
+        Assert.assertEquals(2, MotifSearcher.search(testSequence, testRegex,
+                StrandSerializable.POSITIVE, "").size());
+    }
+
+    @Test
+    public void searchInNegativeStrandTest() {
+        byte[] testSequence = "cgCGcattgcGcaaGGG".getBytes(StandardCharsets.UTF_8);
+        String testRegex = "ca";
+        Assert.assertEquals(1, MotifSearcher.search(testSequence, testRegex,
+                StrandSerializable.NEGATIVE, "").size());
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -54,5 +71,25 @@ public class MotifSearcherTest {
         buf = testSequence.getBytes(StandardCharsets.UTF_8);
         String testRegex = "ta";
         Assert.assertEquals(expectedSize, MotifSearcher.search(buf, testRegex, "").size());
+    }
+
+    @Test
+    public void searchInLargeBufferInPositiveAndNegativeStrandTest() throws IOException {
+
+        final int expectedSize = 5592;
+        final int bufferSize = 50_000_000;
+
+        byte[] buf = new byte[bufferSize];
+        final InputStream resourceAsStream = getClass().getResourceAsStream("/templates/A3.fa");
+        resourceAsStream.read(buf);
+        resourceAsStream.close();
+        String testSequence = new String(buf);
+        final Pattern pattern = Pattern.compile("[^ATCGNatcgn]");
+        testSequence = pattern.matcher(testSequence).replaceAll("n");
+        buf = testSequence.getBytes(StandardCharsets.UTF_8);
+        String testRegex = "ta";
+        final int sumResult = MotifSearcher.search(buf, testRegex, StrandSerializable.POSITIVE, "").size() +
+                MotifSearcher.search(buf, testRegex, StrandSerializable.NEGATIVE, "").size();
+        Assert.assertEquals(expectedSize, sumResult);
     }
 }

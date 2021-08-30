@@ -34,7 +34,7 @@ import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 import java.util.NoSuchElementException;
 
-public class MatchingIterator implements Iterator<MatchingIterator.MatchingResult> {
+public class MatchingIterator implements Iterator<MatchingIterator.Match> {
 
     private final List<PeekableMatcher> matchers;
 
@@ -51,13 +51,13 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
     }
 
     @Override
-    public MatchingResult next() {
+    public Match next() {
         final PeekableMatcher peekableMatcher = matchers.stream()
                 .filter(PeekableMatcher::hasNext)
                 .min(Comparator.comparing(PeekableMatcher::start))
                 .orElseThrow(() -> new NoSuchElementException("\"next()\" invoked without invoking \"hasNext()\"!"));
         peekableMatcher.find();
-        return new MatchingResult(peekableMatcher.matcherNumber,
+        return new Match(peekableMatcher.matcherIndex,
                 peekableMatcher.start(),
                 peekableMatcher.end()
         );
@@ -65,7 +65,7 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
 
     private void enumerateMatchers(final List<PeekableMatcher> matchers) {
         for (int i = 0; i < matchers.size(); i++) {
-            matchers.get(i).matcherNumber = i;
+            matchers.get(i).matcherIndex = i;
         }
     }
 
@@ -75,7 +75,7 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
         private boolean nextValueAvailable;
         private boolean hasNextInvoked;
         private int currentPosition;
-        private int matcherNumber;
+        private int matcherIndex;
 
 
 
@@ -112,8 +112,8 @@ public class MatchingIterator implements Iterator<MatchingIterator.MatchingResul
     }
 
     @Value
-    public static class MatchingResult {
-        Integer matcherNumber;
+    public static class Match {
+        Integer matcherIndex;
         Integer matchingStartResult;
         Integer matchingEndResult;
     }
