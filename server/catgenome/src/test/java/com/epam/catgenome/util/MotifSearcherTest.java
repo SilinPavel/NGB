@@ -8,6 +8,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
@@ -44,7 +45,9 @@ public class MotifSearcherTest {
         final int bufferSize = 50_000_000;
 
         byte[] buf = new byte[bufferSize];
-        getClass().getResourceAsStream("/templates/A3.fa").read(buf);
+        final InputStream resourceAsStream = getClass().getResourceAsStream("/templates/A3.fa");
+        resourceAsStream.read(buf);
+        resourceAsStream.close();
         String testSequence = new String(buf);
         final Pattern pattern = Pattern.compile("[^ATCGNatcgn]");
         testSequence = pattern.matcher(testSequence).replaceAll("n");
