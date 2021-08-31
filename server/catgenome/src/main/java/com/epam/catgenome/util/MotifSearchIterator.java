@@ -28,6 +28,7 @@ import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import lombok.Value;
 
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.regex.Matcher;
@@ -45,8 +46,8 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private static final byte LOWERCASE_T = 't';
     private static final byte LOWERCASE_N = 'n';
 
-    private final LinkedList<Match> positiveMatches = new LinkedList<>();
-    private final LinkedList<Match> negativeMatches = new LinkedList<>();
+    private final Deque<Match> positiveMatches = new LinkedList<>();
+    private final Deque<Match> negativeMatches = new LinkedList<>();
     private final String contig;
     private final StrandSerializable strand;
     private final byte[] sequence;
