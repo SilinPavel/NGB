@@ -39,8 +39,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -51,6 +53,8 @@ import static com.epam.catgenome.component.MessageHelper.getMessage;
 public class MotifSearchManager {
 
     private static final int TRACK_LENGTH = 100;
+    private static final int BUFFER_SIZE = 16_000_000;
+    private static final int OVERLAP = 500;
 
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
@@ -134,22 +138,50 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchChromosomeMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
-        int start = request.getStartPosition() == null
+        final int start = request.getStartPosition() == null
                 ? 0
                 : request.getStartPosition();
-        int end = request.getEndPosition() == null
+        final int end = request.getEndPosition() == null
                 ? chromosome.getSize()
                 : request.getEndPosition();
 
+        final int bufferSize = Math.min(BUFFER_SIZE, end - start);
+        final int overlap = bufferSize < BUFFER_SIZE ? 0 : OVERLAP;
+        Assert.isTrue(overlap < bufferSize, "overlap must be lower then buffer size!");
+
+        final Set<Motif> result = new HashSet<>();
+        int currentStartPosition = start;
+        int currentEndPosition = bufferSize;
+
+        while (result.size() < request.getPageSize() && currentEndPosition <= end ) {
+            result.addAll(searchRegionMotifs(MotifSearchRequest.builder()
+                    .motif(request.getMotif())
+                    .referenceId(request.getReferenceId())
+                    .chromosomeId(request.getChromosomeId())
+                    .startPosition(currentStartPosition)
+                    .endPosition(currentEndPosition)
+                    .strand(request.getStrand())
+                    .build()
+                    ).getResult());
+
+            currentStartPosition += (currentEndPosition - overlap);
+            currentEndPosition += bufferSize;
+            if (currentEndPosition < end) {
+                currentEndPosition -= overlap;
+            } else {
+                currentEndPosition = end;
+            }
+        }
+        final int pageSize = Math.min(result.size(), request.getPageSize());
+        final List<Motif> pageSizedResult = result.stream().limit(pageSize).collect(Collectors.toList());
+        final int lastStartMotifPosition = pageSizedResult.isEmpty()
+                ? end
+                : pageSizedResult.get(pageSizedResult.size() - 1).getStart();
         return MotifSearchResult.builder()
-                .result(
-                    fillMotifList(
-                        chromosome, start, end,
-                        request.getPageSize(),
-                            request.getStrand()))
+                .result(pageSizedResult)
                 .chromosomeId(request.getChromosomeId())
-                .pageSize(request.getPageSize())
-                .position(end)
+                .pageSize(pageSize)
+                .position(lastStartMotifPosition)
                 .build();
     }
 
