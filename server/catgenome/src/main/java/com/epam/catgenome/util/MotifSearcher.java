@@ -24,35 +24,18 @@
 
 package com.epam.catgenome.util;
 
-import com.epam.catgenome.component.MessageHelper;
-import com.epam.catgenome.constant.MessagesConstants;
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 
-import java.util.Spliterators;
-import java.util.Spliterator;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public final class MotifSearcher {
-
-    private static final int NEGATIVE_STRAND = 1;
-    private static final byte CAPITAL_A = 'A';
-    private static final byte CAPITAL_C = 'C';
-    private static final byte CAPITAL_G = 'G';
-    private static final byte CAPITAL_T = 'T';
-    private static final byte CAPITAL_N = 'N';
-    private static final byte LOWERCASE_A = 'a';
-    private static final byte LOWERCASE_C = 'c';
-    private static final byte LOWERCASE_G = 'g';
-    private static final byte LOWERCASE_T = 't';
-    private static final byte LOWERCASE_N = 'n';
-    private static final String EMPTY_VALUE = "";
 
     private MotifSearcher() {
     }
@@ -63,85 +46,11 @@ public final class MotifSearcher {
 
     public static List<Motif> search(final byte[] seq, final String regex,
                                      final StrandSerializable strand, final String contig) {
-        final String sequence;
-        final String negativeSequence;
-
-        if(strand == null) {
-            sequence = new String(seq);
-            negativeSequence = reverseAndComplement(seq);
-        } else if (strand == StrandSerializable.POSITIVE) {
-            sequence = new String(seq);
-            negativeSequence = EMPTY_VALUE;
-        } else if (strand == StrandSerializable.NEGATIVE) {
-            sequence = EMPTY_VALUE;
-            negativeSequence = reverseAndComplement(seq);
-        } else {
-            throw new IllegalArgumentException(MessageHelper.getMessage(MessagesConstants.ERROR_UNSUPPORTED_OPERATION,
-                    strand));
-        }
-
-        final Pattern pattern = Pattern.compile(convertIupacToRegex(regex), Pattern.CASE_INSENSITIVE);
-        final Matcher positiveMatcher = pattern.matcher(sequence);
-        final Matcher negativeMatcher = pattern.matcher(negativeSequence);
-
         return StreamSupport
-                .stream(Spliterators.spliteratorUnknownSize(new MatchingIterator(positiveMatcher, negativeMatcher),
+                .stream(Spliterators.spliteratorUnknownSize(
+                        new MotifSearchIterator(seq, regex, strand, contig),
                         Spliterator.ORDERED), false)
-                .map(matchingResult -> {
-                    final int start = matchingResult.getMatchingStartResult();
-                    final int end = matchingResult.getMatchingEndResult();
-                    final StrandSerializable currentStrand = matchingResult.getMatcherIndex() == NEGATIVE_STRAND
-                            ? StrandSerializable.NEGATIVE
-                            : StrandSerializable.POSITIVE;
-                    final String value = currentStrand == StrandSerializable.NEGATIVE
-                            ? negativeSequence.substring(start, end)
-                            : sequence.substring(start, end);
-                    return new Motif(contig, start, end, currentStrand, value);
-                })
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * Provides reverse complement operation on sequence string
-     *
-     * @param sequence nucleotide sequence
-     * @return reversed complement nucleotide sequence string
-     */
-    private static String reverseAndComplement(final byte[] sequence) {
-        final byte[] reversedSequence = new byte[sequence.length];
-        for (int i = 0, j = sequence.length - 1; i < sequence.length; i++, j--) {
-            reversedSequence[i] = complement(sequence[j]);
-        }
-        return new String(reversedSequence);
-    }
-
-    /**
-     * Converts specified nucleotide to complement one.
-     *
-     * @param nucleotide nucleotide
-     * @return complement nucleotide
-     */
-    public static byte complement(final byte nucleotide) {
-        switch (nucleotide) {
-            case CAPITAL_A:
-            case LOWERCASE_A:
-                return CAPITAL_T;
-            case CAPITAL_C:
-            case LOWERCASE_C:
-                return CAPITAL_G;
-            case CAPITAL_G:
-            case LOWERCASE_G:
-                return CAPITAL_C;
-            case CAPITAL_T:
-            case LOWERCASE_T:
-                return CAPITAL_A;
-            case CAPITAL_N:
-            case LOWERCASE_N:
-                return CAPITAL_N;
-            default:
-                throw new IllegalArgumentException(MessageHelper.getMessage(MessagesConstants.ERROR_INVALID_NUCLEOTIDE,
-                        nucleotide));
-        }
     }
 
     /**
