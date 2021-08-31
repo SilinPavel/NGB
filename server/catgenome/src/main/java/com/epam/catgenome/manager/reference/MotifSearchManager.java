@@ -89,10 +89,10 @@ public class MotifSearchManager {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
         return MotifSearchResult.builder()
                 .result(
-                        fillMotifList(
-                                chromosome, request.getStartPosition(),
-                                request.getEndPosition(), 0,
-                                request.getStrand()))
+                    fillMotifList(
+                        chromosome, request.getStartPosition(),
+                        request.getEndPosition(), 0,
+                            request.getStrand()))
                 .chromosomeId(request.getChromosomeId())
                 .pageSize(request.getPageSize())
                 .position(request.getEndPosition())
@@ -108,10 +108,11 @@ public class MotifSearchManager {
                 ? chromosome.getSize()
                 : request.getEndPosition();
         return MotifSearchResult.builder()
-                .result(fillMotifList(
+                .result(
+                    fillMotifList(
                         chromosome, start, end,
                         request.getPageSize(),
-                        request.getStrand()))
+                            request.getStrand()))
                 .chromosomeId(request.getChromosomeId())
                 .pageSize(request.getPageSize())
                 .position(end)
