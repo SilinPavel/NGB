@@ -24,10 +24,10 @@ import static com.epam.catgenome.component.MessageHelper.getMessage;
 @Slf4j
 public class MotifSearchManager {
 
+    private static final int TRACK_LENGTH = 100;
+
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
-
-    private static final int TRACK_LENGTH = 100;
 
     public Track<StrandedSequence> fillTrackWithMotifSearch(final Track<StrandedSequence> track,
                                                             final String motif,
