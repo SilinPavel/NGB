@@ -32,11 +32,13 @@ import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
 import com.epam.catgenome.entity.reference.motif.MotifSearchType;
 import com.epam.catgenome.entity.track.Track;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
+import com.epam.catgenome.util.MotifSearcher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -52,6 +54,9 @@ public class MotifSearchManager {
 
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
+
+    @Autowired
+    private ReferenceManager referenceManager;
 
     public Track<StrandedSequence> fillTrackWithMotifSearch(final Track<StrandedSequence> track,
                                                             final String motif,
@@ -110,15 +115,20 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
+        final byte[] sequence;
+        try {
+            sequence= referenceManager.getSequenceByteArray(request.getStartPosition(),
+                            request.getEndPosition(), request.getReferenceId(), chromosome.getName());
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to read reference data by ID: " + request.getReferenceId(), e);
+        }
+        final List<Motif> searchResult =
+                MotifSearcher.search(sequence, request.getMotif(), request.getStrand(), chromosome.getName());
         return MotifSearchResult.builder()
-                .result(
-                    fillMotifList(
-                        chromosome, request.getStartPosition(),
-                        request.getEndPosition(), 0,
-                            request.getStrand()))
+                .result(searchResult)
                 .chromosomeId(request.getChromosomeId())
-                .pageSize(request.getPageSize())
-                .position(request.getEndPosition())
+                .pageSize(searchResult.size())
+                .position(searchResult.get(searchResult.size()-1).getStart())
                 .build();
     }
 
