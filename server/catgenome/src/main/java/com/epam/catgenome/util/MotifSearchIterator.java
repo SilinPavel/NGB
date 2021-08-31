@@ -24,17 +24,12 @@
 
 package com.epam.catgenome.util;
 
-import com.epam.catgenome.component.MessageHelper;
-import com.epam.catgenome.constant.MessagesConstants;
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import lombok.Value;
 
 import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -72,7 +67,8 @@ public class MotifSearchIterator implements Iterator<Motif> {
 
     private void init() {
         if(strand == null) {
-            asyncPopulateMatches();
+            populateMatches(new String(sequence), true);
+            populateMatches(reverseAndComplement(sequence), false);
         } else if (strand == StrandSerializable.POSITIVE) {
             populateMatches(new String(sequence), true);
         } else {
@@ -91,19 +87,6 @@ public class MotifSearchIterator implements Iterator<Motif> {
                 negativeMatches.add(new Match(seq.length() - matcher.end(), seq.length() - matcher.start()));
             }
             position = matcher.start() + 1;
-        }
-    }
-
-    private void asyncPopulateMatches() {
-        final ExecutorService es = Executors.newSingleThreadExecutor();
-        es.submit(() -> populateMatches(new String(sequence), true));
-        es.shutdown();
-        populateMatches(reverseAndComplement(sequence), false);
-        try {
-            es.awaitTermination(10, TimeUnit.SECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException(e);
         }
     }
 
@@ -175,8 +158,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
             case LOWERCASE_N:
                 return CAPITAL_N;
             default:
-                throw new IllegalArgumentException(MessageHelper.getMessage(MessagesConstants.ERROR_INVALID_NUCLEOTIDE,
-                        nucleotide));
+                throw new IllegalStateException("Not supported nucleotide: " + nucleotide);
         }
     }
 

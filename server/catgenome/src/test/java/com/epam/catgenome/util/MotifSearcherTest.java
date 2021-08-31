@@ -3,19 +3,12 @@ package com.epam.catgenome.util;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.web.WebAppConfiguration;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@WebAppConfiguration()
-@ContextConfiguration({"classpath:applicationContext-test.xml", "classpath:catgenome-servlet-test.xml"})
 public class MotifSearcherTest {
 
     @Test
@@ -41,7 +34,7 @@ public class MotifSearcherTest {
                 StrandSerializable.NEGATIVE, "").size());
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = IllegalStateException.class)
     public void searchThrowsExceptionOnInvalidSequence() {
         byte[] testSequence = "zxcontig".getBytes(StandardCharsets.UTF_8);
         String testRegex = "con";
@@ -58,36 +51,36 @@ public class MotifSearcherTest {
     @Test
     public void searchInLargeBufferTest() throws IOException {
 
-        final int expectedSize = 5592;
+        final int expectedSize = 57534;
         final int bufferSize = 50_000_000;
 
         byte[] buf = new byte[bufferSize];
-        final InputStream resourceAsStream = getClass().getResourceAsStream("/templates/A3.fa");
+        final InputStream resourceAsStream = getClass().getResourceAsStream("/templates/dm606.X.fa");
         resourceAsStream.read(buf);
         resourceAsStream.close();
         String testSequence = new String(buf);
         final Pattern pattern = Pattern.compile("[^ATCGNatcgn]");
         testSequence = pattern.matcher(testSequence).replaceAll("n");
         buf = testSequence.getBytes(StandardCharsets.UTF_8);
-        String testRegex = "ta";
+        String testRegex = "tacyrw";
         Assert.assertEquals(expectedSize, MotifSearcher.search(buf, testRegex, "").size());
     }
 
     @Test
     public void searchInLargeBufferInPositiveAndNegativeStrandTest() throws IOException {
 
-        final int expectedSize = 5592;
+        final int expectedSize = 57534;
         final int bufferSize = 50_000_000;
 
         byte[] buf = new byte[bufferSize];
-        final InputStream resourceAsStream = getClass().getResourceAsStream("/templates/A3.fa");
+        final InputStream resourceAsStream = getClass().getResourceAsStream("/templates/dm606.X.fa");
         resourceAsStream.read(buf);
         resourceAsStream.close();
         String testSequence = new String(buf);
         final Pattern pattern = Pattern.compile("[^ATCGNatcgn]");
         testSequence = pattern.matcher(testSequence).replaceAll("n");
         buf = testSequence.getBytes(StandardCharsets.UTF_8);
-        String testRegex = "ta";
+        String testRegex = "tacyrw";
         final int sumResult = MotifSearcher.search(buf, testRegex, StrandSerializable.POSITIVE, "").size() +
                 MotifSearcher.search(buf, testRegex, StrandSerializable.NEGATIVE, "").size();
         Assert.assertEquals(expectedSize, sumResult);
