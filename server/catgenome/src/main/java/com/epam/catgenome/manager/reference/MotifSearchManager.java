@@ -34,7 +34,6 @@ import com.epam.catgenome.entity.track.Track;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import com.epam.catgenome.util.MotifSearcher;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -132,7 +131,6 @@ public class MotifSearchManager {
                 : searchResult.get(searchResult.size() - 1).getStart();
         return MotifSearchResult.builder()
                 .result(searchResult)
-
                 .chromosomeId(request.getChromosomeId())
                 .pageSize(searchResult.size())
                 .position(lastStart)
