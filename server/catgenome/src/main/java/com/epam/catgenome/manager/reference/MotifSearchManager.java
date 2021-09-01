@@ -152,9 +152,9 @@ public class MotifSearchManager {
 
         final Set<Motif> result = new HashSet<>();
         int currentStartPosition = start;
-        int currentEndPosition = bufferSize;
+        int currentEndPosition = bufferSize + start;
 
-        while (result.size() < request.getPageSize() && currentEndPosition < end ) {
+        while (result.size() < request.getPageSize() && currentEndPosition <= end ) {
             result.addAll(searchRegionMotifs(MotifSearchRequest.builder()
                     .motif(request.getMotif())
                     .referenceId(request.getReferenceId())
@@ -167,7 +167,7 @@ public class MotifSearchManager {
 
             currentStartPosition += (currentEndPosition - overlap);
             currentEndPosition += bufferSize;
-            if (currentEndPosition < end) {
+            if (currentEndPosition <= end) {
                 currentEndPosition -= overlap;
             } else {
                 currentEndPosition = end;
