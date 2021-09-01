@@ -34,16 +34,13 @@ import com.epam.catgenome.entity.track.Track;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import com.epam.catgenome.util.MotifSearcher;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.hadoop.yarn.webapp.hamlet.Hamlet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.epam.catgenome.component.MessageHelper.getMessage;
@@ -53,8 +50,8 @@ import static com.epam.catgenome.component.MessageHelper.getMessage;
 public class MotifSearchManager {
 
     private static final int TRACK_LENGTH = 100;
-    private static final int BUFFER_SIZE = 16_000_000;
-    private static final int OVERLAP = 500;
+    private static final int BUFFER_SIZE = 50;
+    private static final int OVERLAP = 10;
 
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
@@ -67,6 +64,7 @@ public class MotifSearchManager {
                                                             final StrandSerializable strand) {
         final List<StrandedSequence> result = search(
                 MotifSearchRequest.builder()
+                        .referenceId(track.getId())
                         .startPosition(track.getStartIndex())
                         .endPosition(track.getEndIndex())
                         .chromosomeId(track.getChromosome().getId())
@@ -129,11 +127,15 @@ public class MotifSearchManager {
         final List<Motif> searchResult =
                 MotifSearcher.search(sequence, request.getMotif(), request.getStrand(),
                         chromosome.getName(), request.getStartPosition());
+        final int lastStart = searchResult.size() == 0
+                ? request.getStartPosition()
+                : searchResult.get(searchResult.size() - 1).getStart();
         return MotifSearchResult.builder()
                 .result(searchResult)
+
                 .chromosomeId(request.getChromosomeId())
                 .pageSize(searchResult.size())
-                .position(searchResult.get(searchResult.size()-1).getStart())
+                .position(lastStart)
                 .build();
     }
 
@@ -150,27 +152,26 @@ public class MotifSearchManager {
         final int overlap = bufferSize < BUFFER_SIZE ? 0 : OVERLAP;
         Assert.isTrue(overlap < bufferSize, "overlap must be lower then buffer size!");
 
-        final Set<Motif> result = new HashSet<>();
-        int currentStartPosition = start;
-        int currentEndPosition = bufferSize;
+        final Set<Motif> result = new LinkedHashSet<>();
+        int currentStart = start;
+        int currentEnd = bufferSize + start;
 
-        while (result.size() < request.getPageSize() && currentEndPosition < end ) {
+        while (result.size() < request.getPageSize() && currentEnd <= end ) {
+
             result.addAll(searchRegionMotifs(MotifSearchRequest.builder()
                     .motif(request.getMotif())
                     .referenceId(request.getReferenceId())
                     .chromosomeId(request.getChromosomeId())
-                    .startPosition(currentStartPosition)
-                    .endPosition(currentEndPosition)
+                    .startPosition(currentStart)
+                    .endPosition(currentEnd)
                     .strand(request.getStrand())
                     .build()
                     ).getResult());
 
-            currentStartPosition += (currentEndPosition - overlap);
-            currentEndPosition += bufferSize;
-            if (currentEndPosition < end) {
-                currentEndPosition -= overlap;
-            } else {
-                currentEndPosition = end;
+            currentStart = (currentEnd - overlap);
+            currentEnd += bufferSize;
+            if (currentEnd < end) {
+                currentEnd -= overlap;
             }
         }
         final int pageSize = Math.min(result.size(), request.getPageSize());

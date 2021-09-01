@@ -70,7 +70,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
     }
 
     private void init() {
-        if(strand == StrandSerializable.NONE) {
+        if (strand == StrandSerializable.NONE) {
             populateMatches(new String(sequence), true);
             populateMatches(reverseAndComplement(sequence), false);
         } else if (strand == StrandSerializable.POSITIVE) {
