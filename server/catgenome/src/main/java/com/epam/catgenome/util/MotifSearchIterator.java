@@ -52,22 +52,25 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private final StrandSerializable strand;
     private final byte[] sequence;
     private final String regex;
+    private final int offset;
 
 
     public MotifSearchIterator(final byte[] seq, final String iupacRegex,
-                               final StrandSerializable strand, final String contig) {
-        if (strand != null && strand != StrandSerializable.POSITIVE && strand != StrandSerializable.NEGATIVE) {
+                               final StrandSerializable strand, final String contig, final int start) {
+        if (strand != StrandSerializable.NONE && strand != StrandSerializable.POSITIVE
+                && strand != StrandSerializable.NEGATIVE) {
             throw new IllegalStateException("Not supported strand: " + strand);
         }
         this.strand = strand;
         this.contig = contig;
         this.sequence = seq;
         this.regex = MotifSearcher.convertIupacToRegex(iupacRegex);
+        this.offset = start;
         init();
     }
 
     private void init() {
-        if(strand == null) {
+        if(strand == StrandSerializable.NONE) {
             populateMatches(new String(sequence), true);
             populateMatches(reverseAndComplement(sequence), false);
         } else if (strand == StrandSerializable.POSITIVE) {
@@ -118,7 +121,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
         for (int i = start; i < end; i++) {
             result.append((char) sequence[i]);
         }
-        return new Motif(contig, start, end, strand, result.toString());
+        return new Motif(contig, start + offset, end + offset, strand, result.toString());
     }
 
     /**

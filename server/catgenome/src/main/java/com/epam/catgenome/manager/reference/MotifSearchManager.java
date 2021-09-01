@@ -127,7 +127,8 @@ public class MotifSearchManager {
             throw new IllegalStateException("Unable to read reference data by ID: " + request.getReferenceId(), e);
         }
         final List<Motif> searchResult =
-                MotifSearcher.search(sequence, request.getMotif(), request.getStrand(), chromosome.getName());
+                MotifSearcher.search(sequence, request.getMotif(), request.getStrand(),
+                        chromosome.getName(), request.getStartPosition());
         return MotifSearchResult.builder()
                 .result(searchResult)
                 .chromosomeId(request.getChromosomeId())
@@ -153,7 +154,7 @@ public class MotifSearchManager {
         int currentStartPosition = start;
         int currentEndPosition = bufferSize;
 
-        while (result.size() < request.getPageSize() && currentEndPosition <= end ) {
+        while (result.size() < request.getPageSize() && currentEndPosition < end ) {
             result.addAll(searchRegionMotifs(MotifSearchRequest.builder()
                     .motif(request.getMotif())
                     .referenceId(request.getReferenceId())
