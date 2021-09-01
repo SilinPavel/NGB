@@ -39,7 +39,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.epam.catgenome.component.MessageHelper.getMessage;
@@ -48,7 +51,6 @@ import static com.epam.catgenome.component.MessageHelper.getMessage;
 @Slf4j
 public class MotifSearchManager {
 
-    private static final int TRACK_LENGTH = 100;
     private static final int BUFFER_SIZE = 50;
     private static final int OVERLAP = 10;
 
@@ -154,7 +156,7 @@ public class MotifSearchManager {
         int currentStart = start;
         int currentEnd = bufferSize + start;
 
-        while (result.size() < request.getPageSize() && currentEnd <= end ) {
+        while (result.size() < request.getPageSize() && currentEnd <= end) {
 
             result.addAll(searchRegionMotifs(MotifSearchRequest.builder()
                     .motif(request.getMotif())
@@ -195,11 +197,8 @@ public class MotifSearchManager {
                 : motifSearchRequest.getEndPosition();
 
         return MotifSearchResult.builder()
-                .result(
-                    fillMotifList(
-                        chr, start, end,
-                        motifSearchRequest.getPageSize(),
-                            motifSearchRequest.getStrand()))
+                .result(new ArrayList<>()
+                    )
                 .chromosomeId(chr.getId())
                 .pageSize(motifSearchRequest.getPageSize())
                 .position(end)
@@ -216,52 +215,5 @@ public class MotifSearchManager {
 
     private Chromosome getFirstChromosomeFromGenome(Long referenceId) {
         return referenceGenomeManager.loadChromosomes(referenceId).get(0);
-    }
-
-    private List<Motif> fillMotifList(final Chromosome chromosome,
-                                      final Integer trackStart, final Integer trackEnd,
-                                      final Integer pageSize, final StrandSerializable strand) {
-        final List<Motif> motifs = new ArrayList<>();
-        if (pageSize == null || pageSize == 0) {
-            motifs.addAll(getStubMotifList(chromosome, trackStart, trackEnd, strand));
-        } else {
-            List<Motif> motifList = getStubMotifList(chromosome, trackStart, trackEnd, strand);
-            if (motifList.size() > pageSize) {
-                motifs.addAll(motifList.stream().limit(pageSize).collect(Collectors.toList()));
-            } else {
-                motifs.addAll(motifList);
-            }
-        }
-        return motifs;
-    }
-
-    private List<Motif> getStubMotifList(final Chromosome chromosome, final Integer trackStart, final Integer trackEnd,
-                                         final StrandSerializable strand) {
-        final int motifStart = trackStart == null ? 0 : trackStart;
-        int motifLength = 1000;
-        final int motifEnd = trackEnd == null ? (motifStart + motifLength) : trackEnd;
-        int count = (motifEnd - motifStart) / TRACK_LENGTH;
-        List<Motif> motifs = new ArrayList<>();
-        for (int i = 0; i <= count; i++) {
-            int start = (motifStart + TRACK_LENGTH * i);
-            String value = generateString();
-            int end = start + value.length();
-            motifs.add(
-                    new Motif(chromosome.getName(), start, end,
-                            strand != null ? strand : StrandSerializable.POSITIVE,
-                            value));
-        }
-        return motifs;
-    }
-
-    private String generateString() {
-        String characters = "ATCG";
-        Random rng = new Random();
-        int length = rng.nextInt(TRACK_LENGTH);
-        char[] text = new char[length];
-        for (int i = 0; i < length; i++) {
-            text[i] = characters.charAt(rng.nextInt(characters.length()));
-        }
-        return new String(text);
     }
 }
