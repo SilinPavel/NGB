@@ -163,7 +163,7 @@ public class MotifSearchManager {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
         Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() < chromosome.getSize(),
                 getMessage("End search position is out of range!"));
-        final int pageSize = request.getPageSize() == null
+        final int pageSize = request.getPageSize() == null || request.getPageSize()  <= 0
                 ? defaultPageSize
                 : request.getPageSize();
         final int start = request.getStartPosition() == null
@@ -174,13 +174,7 @@ public class MotifSearchManager {
                 : request.getEndPosition();
 
         final int bufferSize = Math.min(this.bufferSize, end - start);
-        int overlap = request.getSlidingWindow() == null
-                ? defaultOverlap
-                : request.getSlidingWindow();
-        overlap  = bufferSize < this.bufferSize
-                ? 0
-                : overlap;
-
+        int overlap = validateAndAdjustOverlap(request, bufferSize);
 
         final Set<Motif> result = new LinkedHashSet<>();
         int currentStart = start;
@@ -214,6 +208,18 @@ public class MotifSearchManager {
                 .pageSize(pageSizedResult.size())
                 .position(lastStartMotifPosition)
                 .build();
+    }
+
+    private int validateAndAdjustOverlap(MotifSearchRequest request, int bufferSize) {
+        int overlap = request.getSlidingWindow() == null
+                || request.getSlidingWindow() <= 0
+                || request.getSlidingWindow() >= bufferSize
+                ? defaultOverlap
+                : request.getSlidingWindow();
+        if (bufferSize < this.bufferSize) {
+            overlap = 0;
+        }
+        return overlap;
     }
 
     private MotifSearchResult searchWholeGenomeMotifs(final MotifSearchRequest motifSearchRequest) {
