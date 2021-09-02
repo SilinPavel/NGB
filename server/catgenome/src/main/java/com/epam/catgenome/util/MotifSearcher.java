@@ -40,15 +40,17 @@ public final class MotifSearcher {
     private MotifSearcher() {
     }
 
-    public static List<Motif> search(final byte[] seq, final String regex, final String contig, final int start) {
-        return search(seq, regex, StrandSerializable.NONE, contig, start);
+    public static List<Motif> search(final byte[] seq, final String regex,
+                                     final String contig, final int start, final boolean includeSequence) {
+        return search(seq, regex, null, contig, start, includeSequence);
     }
 
     public static List<Motif> search(final byte[] seq, final String regex,
-                                     final StrandSerializable strand, final String contig, final int start) {
+                                     final StrandSerializable strand, final String contig,
+                                     final int start, final boolean includeSequence) {
         return StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(
-                        new MotifSearchIterator(seq, regex, strand, contig, start),
+                        new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence),
                         Spliterator.ORDERED), false)
                 .collect(Collectors.toList());
     }

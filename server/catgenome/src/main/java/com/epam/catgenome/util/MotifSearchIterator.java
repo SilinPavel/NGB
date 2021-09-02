@@ -53,11 +53,13 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private final byte[] sequence;
     private final String regex;
     private final int offset;
+    private final boolean includeSequence;
 
 
     public MotifSearchIterator(final byte[] seq, final String iupacRegex,
-                               final StrandSerializable strand, final String contig, final int start) {
-        if (strand != StrandSerializable.NONE && strand != StrandSerializable.POSITIVE
+                               final StrandSerializable strand, final String contig,
+                               final int start, final boolean includeSequence) {
+        if (strand != null && strand != StrandSerializable.POSITIVE
                 && strand != StrandSerializable.NEGATIVE) {
             throw new IllegalStateException("Not supported strand: " + strand);
         }
@@ -66,11 +68,12 @@ public class MotifSearchIterator implements Iterator<Motif> {
         this.sequence = seq;
         this.regex = MotifSearcher.convertIupacToRegex(iupacRegex);
         this.offset = start;
+        this.includeSequence = includeSequence;
         init();
     }
 
     private void init() {
-        if (strand == StrandSerializable.NONE) {
+        if (strand == null) {
             populateMatches(new String(sequence), true);
             populateMatches(reverseAndComplement(sequence), false);
         } else if (strand == StrandSerializable.POSITIVE) {
@@ -113,7 +116,10 @@ public class MotifSearchIterator implements Iterator<Motif> {
             match = positiveMatches.removeFirst();
             currentStrand = StrandSerializable.POSITIVE;
         }
-        return getMotif(contig, match.start, match.end, currentStrand);
+        if (includeSequence) {
+            return getMotif(contig, match.start, match.end, currentStrand);
+        }
+        return new Motif(contig, match.start + offset, match.end + offset, currentStrand, null);
     }
 
     private Motif getMotif(final String contig, final int start, final int end,  StrandSerializable strand) {

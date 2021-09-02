@@ -35,6 +35,7 @@ import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import com.epam.catgenome.util.MotifSearcher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -51,14 +52,24 @@ import static com.epam.catgenome.component.MessageHelper.getMessage;
 @Slf4j
 public class MotifSearchManager {
 
-    private static final int BUFFER_SIZE = 50;
-    private static final int OVERLAP = 10;
+    @Value("${motif.search.buffer.size}")
+    private int bufferSize;
+
+    @Value("${motif.search.sliding.window}")
+    private int defaultOverlap;
+
+    @Value("${motif.search.default.page.size}")
+    private int defaultPageSize;
+
+    @Value("${motif.search.default.include.sequence}")
+    private boolean defaultIncludeSequence;
 
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
 
     @Autowired
     private ReferenceManager referenceManager;
+
 
     public Track<StrandedSequence> fillTrackWithMotifSearch(final Track<StrandedSequence> track,
                                                             final String motif,
@@ -74,7 +85,7 @@ public class MotifSearchManager {
                         .pageSize(0)
                         .strand(strand)
                         .build()).getResult().stream()
-                .map(m -> new StrandedSequence(m.getStart(), m.getEnd(), m.getValue(), m.getStrand()))
+                .map(m -> new StrandedSequence(m.getStart(), m.getEnd(), m.getSequence(), m.getStrand()))
                 .collect(Collectors.toList());
         track.setBlocks(result);
         return track;
@@ -118,17 +129,13 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
-        final byte[] sequence;
-        try {
-            sequence= referenceManager.getSequenceByteArray(request.getStartPosition(),
-                            request.getEndPosition(), request.getReferenceId(), chromosome.getName());
-        } catch (IOException e) {
-            throw new IllegalStateException("Unable to read reference data by ID: " + request.getReferenceId(), e);
-        }
+        final boolean enableSequence = request.getIncludeSequence() == null
+                        ? defaultIncludeSequence
+                        : request.getIncludeSequence();
         final List<Motif> searchResult =
-                MotifSearcher.search(sequence, request.getMotif(), request.getStrand(),
-                        chromosome.getName(), request.getStartPosition());
-        final int lastStart = searchResult.size() == 0
+                MotifSearcher.search(getSequence(request, chromosome), request.getMotif(), request.getStrand(),
+                        chromosome.getName(), request.getStartPosition(), enableSequence);
+        final int lastStart = searchResult.isEmpty()
                 ? request.getStartPosition()
                 : searchResult.get(searchResult.size() - 1).getStart();
         return MotifSearchResult.builder()
@@ -139,8 +146,22 @@ public class MotifSearchManager {
                 .build();
     }
 
+    private byte[] getSequence(MotifSearchRequest request, Chromosome chromosome) {
+        final byte[] sequence;
+        try {
+            sequence= referenceManager.getSequenceByteArray(request.getStartPosition(),
+                            request.getEndPosition(), request.getReferenceId(), chromosome.getName());
+        } catch (IOException e) {
+            throw new IllegalStateException("Unable to read reference data by ID: " + request.getReferenceId(), e);
+        }
+        return sequence;
+    }
+
     private MotifSearchResult searchChromosomeMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
+        int pageSize = request.getPageSize() == null
+                ? defaultPageSize
+                : request.getPageSize();
         final int start = request.getStartPosition() == null
                 ? 0
                 : request.getStartPosition();
@@ -148,15 +169,20 @@ public class MotifSearchManager {
                 ? chromosome.getSize()
                 : request.getEndPosition();
 
-        final int bufferSize = Math.min(BUFFER_SIZE, end - start);
-        final int overlap = bufferSize < BUFFER_SIZE ? 0 : OVERLAP;
-        Assert.isTrue(overlap < bufferSize, "overlap must be lower then buffer size!");
+        final int bufferSize = Math.min(this.bufferSize, end - start);
+        int overlap = request.getSlidingWindow() == null
+                ? defaultOverlap
+                : request.getSlidingWindow();
+        overlap  = bufferSize < this.bufferSize
+                ? 0
+                : overlap;
+
 
         final Set<Motif> result = new LinkedHashSet<>();
         int currentStart = start;
         int currentEnd = bufferSize + start;
 
-        while (result.size() < request.getPageSize() && currentEnd <= end) {
+        while (result.size() < pageSize && currentStart < end) {
 
             result.addAll(searchRegionMotifs(MotifSearchRequest.builder()
                     .motif(request.getMotif())
@@ -168,21 +194,20 @@ public class MotifSearchManager {
                     .build()
                     ).getResult());
 
-            currentStart = (currentEnd - overlap);
-            currentEnd += bufferSize;
-            if (currentEnd < end) {
-                currentEnd -= overlap;
-            }
+            currentStart = currentStart + bufferSize - overlap;
+            currentEnd = currentEnd + bufferSize - overlap;
+            currentEnd = Math.min(currentEnd, end);
         }
-        final int pageSize = Math.min(result.size(), request.getPageSize());
-        final List<Motif> pageSizedResult = result.stream().limit(pageSize).collect(Collectors.toList());
+        final List<Motif> pageSizedResult = result.stream()
+                .limit(Math.min(result.size(), pageSize))
+                .collect(Collectors.toList());
         final int lastStartMotifPosition = pageSizedResult.isEmpty()
                 ? end
                 : pageSizedResult.get(pageSizedResult.size() - 1).getStart();
         return MotifSearchResult.builder()
                 .result(pageSizedResult)
                 .chromosomeId(request.getChromosomeId())
-                .pageSize(pageSize)
+                .pageSize(pageSizedResult.size())
                 .position(lastStartMotifPosition)
                 .build();
     }
