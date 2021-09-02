@@ -62,6 +62,7 @@ public class MotifSearchManager {
                 MotifSearchRequest.builder()
                         .startPosition(track.getStartIndex())
                         .endPosition(track.getEndIndex())
+                        .referenceId(track.getId())
                         .chromosomeId(track.getChromosome().getId())
                         .motif(motif)
                         .searchType(MotifSearchType.REGION)
