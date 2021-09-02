@@ -58,10 +58,10 @@ public class MotifSearchManager {
     @Value("${motif.search.sliding.window}")
     private int defaultOverlap;
 
-    @Value("${motif.search.default.page.size}")
+    @Value("${motif.search.page.size}")
     private int defaultPageSize;
 
-    @Value("${motif.search.default.include.sequence}")
+    @Value("${motif.search.include.sequence}")
     private boolean defaultIncludeSequence;
 
     @Autowired
