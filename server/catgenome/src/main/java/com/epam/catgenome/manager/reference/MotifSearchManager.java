@@ -69,7 +69,7 @@ public class MotifSearchManager {
                         .pageSize(Integer.MAX_VALUE)
                         .strand(strand)
                         .build()).getResult().stream()
-                .map(m -> new StrandedSequence(m.getStart(), m.getEnd(), m.getValue(), m.getStrand()))
+                .map(m -> new StrandedSequence(m.getStart(), m.getEnd(), m.getSequence(), m.getStrand()))
                 .collect(Collectors.toList());
         track.setBlocks(result);
         return track;
