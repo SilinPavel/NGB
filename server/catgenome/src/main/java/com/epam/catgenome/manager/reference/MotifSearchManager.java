@@ -148,7 +148,7 @@ public class MotifSearchManager {
                 .build();
     }
 
-    private byte[] getSequence(MotifSearchRequest request, Chromosome chromosome) {
+    private byte[] getSequence(final MotifSearchRequest request, final Chromosome chromosome) {
         final byte[] sequence;
         try {
             sequence= referenceManager.getSequenceByteArray(request.getStartPosition(),
@@ -163,7 +163,7 @@ public class MotifSearchManager {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
         Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() < chromosome.getSize(),
                 getMessage("End search position is out of range!"));
-        int pageSize = request.getPageSize() == null
+        final int pageSize = request.getPageSize() == null
                 ? defaultPageSize
                 : request.getPageSize();
         final int start = request.getStartPosition() == null
