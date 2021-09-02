@@ -129,6 +129,8 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
+        Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() < chromosome.getSize(),
+                getMessage("End search position is out of range!"));
         final boolean enableSequence = request.getIncludeSequence() == null
                         ? defaultIncludeSequence
                         : request.getIncludeSequence();
@@ -159,6 +161,8 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchChromosomeMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
+        Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() < chromosome.getSize(),
+                getMessage("End search position is out of range!"));
         int pageSize = request.getPageSize() == null
                 ? defaultPageSize
                 : request.getPageSize();
