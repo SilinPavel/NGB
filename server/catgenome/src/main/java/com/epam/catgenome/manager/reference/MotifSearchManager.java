@@ -52,16 +52,16 @@ import static com.epam.catgenome.component.MessageHelper.getMessage;
 @Slf4j
 public class MotifSearchManager {
 
-    @Value("${motif.search.buffer.size}")
+    @Value("${motif.search.buffer.size:16000000}")
     private int bufferSize;
 
-    @Value("${motif.search.sliding.window}")
+    @Value("${motif.search.sliding.window:1000}")
     private int defaultOverlap;
 
-    @Value("${motif.search.page.size}")
+    @Value("${motif.search.page.size:100}")
     private int defaultPageSize;
 
-    @Value("${motif.search.include.sequence}")
+    @Value("${motif.search.include.sequence:false}")
     private boolean defaultIncludeSequence;
 
     @Autowired
@@ -131,12 +131,12 @@ public class MotifSearchManager {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
         Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() < chromosome.getSize(),
                 getMessage("End search position is out of range!"));
-        final boolean enableSequence = request.getIncludeSequence() == null
+        final boolean includeSequence = request.getIncludeSequence() == null
                         ? defaultIncludeSequence
                         : request.getIncludeSequence();
         final List<Motif> searchResult =
                 MotifSearcher.search(getSequence(request, chromosome), request.getMotif(), request.getStrand(),
-                        chromosome.getName(), request.getStartPosition(), enableSequence);
+                        chromosome.getName(), request.getStartPosition(), includeSequence);
         final int lastStart = searchResult.isEmpty()
                 ? request.getStartPosition()
                 : searchResult.get(searchResult.size() - 1).getStart();
