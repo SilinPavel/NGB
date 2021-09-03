@@ -26,7 +26,10 @@ package com.epam.catgenome.util;
 
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
+import htsjdk.samtools.util.CollectionUtil;
 import lombok.Value;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.QueueUtils;
 
 import java.util.Deque;
 import java.util.Iterator;
@@ -57,8 +60,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
     public MotifSearchIterator(final byte[] seq, final String iupacRegex,
                                final StrandSerializable strand, final String contig,
                                final int start, final boolean includeSequence) {
-        if (strand != null && strand != StrandSerializable.POSITIVE
-                && strand != StrandSerializable.NEGATIVE) {
+        if (strand != null && strand != StrandSerializable.POSITIVE && strand != StrandSerializable.NEGATIVE) {
             throw new IllegalStateException("Not supported strand: " + strand);
         }
         this.contig = contig;

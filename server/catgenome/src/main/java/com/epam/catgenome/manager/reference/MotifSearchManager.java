@@ -24,6 +24,7 @@
 
 package com.epam.catgenome.manager.reference;
 
+import com.epam.catgenome.constant.MessagesConstants;
 import com.epam.catgenome.entity.reference.Chromosome;
 import com.epam.catgenome.entity.reference.StrandedSequence;
 import com.epam.catgenome.entity.reference.motif.Motif;
@@ -130,7 +131,7 @@ public class MotifSearchManager {
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
         Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() <= chromosome.getSize(),
-                getMessage("End search position is out of range!"));
+                getMessage(MessagesConstants.ERROR_POSITION_OUT_OF_RANGE, request.getEndPosition()));
         final boolean includeSequence = request.getIncludeSequence() == null
                         ? defaultIncludeSequence
                         : request.getIncludeSequence();
@@ -144,7 +145,7 @@ public class MotifSearchManager {
                 .result(searchResult)
                 .chromosomeId(request.getChromosomeId())
                 .pageSize(searchResult.size())
-                .position(lastStart)
+                .position(lastStart < chromosome.getSize() ? lastStart + 1 : null)
                 .build();
     }
 
@@ -154,8 +155,7 @@ public class MotifSearchManager {
             sequence= referenceManager.getSequenceByteArray(request.getStartPosition(),
                             request.getEndPosition(), request.getReferenceId(), chromosome.getName());
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    getMessage("Unable to read reference data by ID: " + request.getReferenceId()));
+            throw new IllegalStateException(getMessage(MessagesConstants.ERROR_REFERENCE_SEQUENCE_READING));
         }
         return sequence;
     }
@@ -163,16 +163,12 @@ public class MotifSearchManager {
     private MotifSearchResult searchChromosomeMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
         Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() <= chromosome.getSize(),
-                getMessage("End search position is out of range!"));
-        final int pageSize = request.getPageSize() == null || request.getPageSize()  <= 0
+                getMessage(MessagesConstants.ERROR_POSITION_OUT_OF_RANGE, request.getEndPosition()));
+        final int pageSize = request.getPageSize() == null || request.getPageSize() <= 0
                 ? defaultPageSize
                 : request.getPageSize();
-        final int start = request.getStartPosition() == null
-                ? 0
-                : request.getStartPosition();
-        final int end = request.getEndPosition() == null
-                ? chromosome.getSize()
-                : request.getEndPosition();
+        final int start = request.getStartPosition() == null ? 0 : request.getStartPosition();
+        final int end = request.getEndPosition() == null ? chromosome.getSize() : request.getEndPosition();
 
         final int bufferSize = Math.min(this.bufferSize, end - start);
         int overlap = validateAndAdjustOverlap(request, bufferSize);
@@ -207,7 +203,9 @@ public class MotifSearchManager {
                 .result(pageSizedResult)
                 .chromosomeId(request.getChromosomeId())
                 .pageSize(pageSizedResult.size())
-                .position(lastStartMotifPosition)
+                .position(lastStartMotifPosition == null || lastStartMotifPosition.equals(chromosome.getSize())
+                        ? null
+                        : lastStartMotifPosition + 1)
                 .build();
     }
 
