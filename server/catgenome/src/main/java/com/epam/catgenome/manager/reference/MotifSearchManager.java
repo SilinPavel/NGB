@@ -154,7 +154,8 @@ public class MotifSearchManager {
             sequence= referenceManager.getSequenceByteArray(request.getStartPosition(),
                             request.getEndPosition(), request.getReferenceId(), chromosome.getName());
         } catch (IOException e) {
-            throw new IllegalStateException("Unable to read reference data by ID: " + request.getReferenceId(), e);
+            throw new IllegalStateException(
+                    getMessage("Unable to read reference data by ID: " + request.getReferenceId()));
         }
         return sequence;
     }
@@ -193,8 +194,7 @@ public class MotifSearchManager {
                     ).getResult());
 
             currentStart = currentStart + bufferSize - overlap;
-            currentEnd = currentEnd + bufferSize - overlap;
-            currentEnd = Math.min(currentEnd, end);
+            currentEnd = Math.min(currentEnd + bufferSize - overlap, end);
         }
         final List<Motif> pageSizedResult = result.stream()
                 .limit(Math.min(result.size(), pageSize))
@@ -232,8 +232,7 @@ public class MotifSearchManager {
                 : motifSearchRequest.getEndPosition();
 
         return MotifSearchResult.builder()
-                .result(new ArrayList<>()
-                    )
+                .result(new ArrayList<>())
                 .chromosomeId(chr.getId())
                 .pageSize(motifSearchRequest.getPageSize())
                 .position(end)

@@ -44,8 +44,4 @@ public class Motif {
     private final int end;
     private final StrandSerializable strand;
     private final String sequence;
-
-    public String getSequence() {
-        return sequence;
-    }
 }
