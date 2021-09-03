@@ -129,7 +129,7 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
-        Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() < chromosome.getSize(),
+        Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() <= chromosome.getSize(),
                 getMessage("End search position is out of range!"));
         final boolean includeSequence = request.getIncludeSequence() == null
                         ? defaultIncludeSequence
@@ -162,7 +162,7 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchChromosomeMotifs(final MotifSearchRequest request) {
         final Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
-        Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() < chromosome.getSize(),
+        Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() <= chromosome.getSize(),
                 getMessage("End search position is out of range!"));
         final int pageSize = request.getPageSize() == null || request.getPageSize()  <= 0
                 ? defaultPageSize
@@ -199,8 +199,9 @@ public class MotifSearchManager {
         final List<Motif> pageSizedResult = result.stream()
                 .limit(Math.min(result.size(), pageSize))
                 .collect(Collectors.toList());
-        final int lastStartMotifPosition = pageSizedResult.isEmpty()
-                ? end
+        final Integer lastStartMotifPosition = pageSizedResult.isEmpty() ||
+                (end == chromosome.getSize() && pageSizedResult.size() < pageSize)
+                ? null
                 : pageSizedResult.get(pageSizedResult.size() - 1).getStart();
         return MotifSearchResult.builder()
                 .result(pageSizedResult)
