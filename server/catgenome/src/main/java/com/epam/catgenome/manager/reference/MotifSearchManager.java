@@ -146,19 +146,16 @@ public class MotifSearchManager {
     }
 
     private MotifSearchResult searchWholeGenomeMotifs(final MotifSearchRequest request) {
-        final int startPageSize = request.getPageSize() == null ? DEFAULT_PAGE_SIZE : request.getPageSize();
+        final int pageSize = request.getPageSize() == null ? DEFAULT_PAGE_SIZE : request.getPageSize();
         int start = request.getStartPosition() == null ? 0 : request.getStartPosition();
         Chromosome chromosome = loadChrById(request.getReferenceId(), request.getChromosomeId());
         long chrId = chromosome.getId();
-        int end = request.getEndPosition() == null ? chromosome.getSize() : request.getEndPosition();
+        final int end = request.getEndPosition() == null ? chromosome.getSize() : request.getEndPosition();
         if (end < chromosome.getSize()) {
             return searchRegionMotifs(
-                    MotifSearchRequest.builder()
-                            .referenceId(request.getReferenceId())
-                            .strand(request.getStrand())
-                            .pageSize(startPageSize)
+                    request.toBuilder()
+                            .pageSize(pageSize)
                             .searchType(MotifSearchType.REGION)
-                            .motif(request.getMotif())
                             .chromosomeId(chrId)
                             .startPosition(start)
                             .endPosition(end)
@@ -166,36 +163,28 @@ public class MotifSearchManager {
         }
         final List<Chromosome> chromosomes = getChromosomesOfGenome(request.getReferenceId());
         final List<Motif> motifs = new ArrayList<>();
-        int pageSize = startPageSize;
-        while (chromosome != null) {
+        while (chromosome != null && pageSize - motifs.size() > 0) {
             chrId = chromosome.getId();
-            end = chromosome.getSize();
-            List<Motif> result = searchChromosomeMotifs(
-                    MotifSearchRequest.builder()
-                            .referenceId(request.getReferenceId())
-                            .strand(request.getStrand())
-                            .pageSize(pageSize)
+            motifs.addAll(searchChromosomeMotifs(
+                    request.toBuilder()
+                            .pageSize(pageSize - motifs.size())
                             .searchType(MotifSearchType.CHROMOSOME)
-                            .motif(request.getMotif())
                             .chromosomeId(chrId)
                             .startPosition(start)
-                            .endPosition(end)
+                            .endPosition(chromosome.getSize())
                             .build())
-                    .getResult();
-            motifs.addAll(result.stream().limit(pageSize).collect(Collectors.toList()));
-            pageSize -= result.size();
-            if (pageSize <= 0) {
-                end = motifs.get(motifs.size() - 1).getEnd();
-                break;
-            }
+                    .getResult()
+                    .stream()
+                    .limit(pageSize - motifs.size())
+                    .collect(Collectors.toList()));
             start = 0;
             chromosome = getNextChromosome(chromosomes, chromosome);
         }
         return MotifSearchResult.builder()
                 .result(motifs)
-                .pageSize(startPageSize)
+                .pageSize(pageSize)
                 .chromosomeId(chrId)
-                .position(end)
+                .position(motifs.size() == 0 ? 0 : motifs.get(motifs.size() - 1).getStart())
                 .build();
     }
 
