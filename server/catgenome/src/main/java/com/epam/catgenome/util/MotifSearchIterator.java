@@ -26,10 +26,7 @@ package com.epam.catgenome.util;
 
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
-import htsjdk.samtools.util.CollectionUtil;
 import lombok.Value;
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections4.QueueUtils;
 
 import java.util.Deque;
 import java.util.Iterator;
