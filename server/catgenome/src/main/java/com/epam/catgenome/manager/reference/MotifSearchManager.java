@@ -184,7 +184,8 @@ public class MotifSearchManager {
                 .result(motifs)
                 .pageSize(pageSize)
                 .chromosomeId(chrId)
-                .position(motifs.size() == 0 ? 0 : motifs.get(motifs.size() - 1).getStart())
+                .position(chromosome == null && pageSize - motifs.size() > 0 ? 0
+                        : motifs.get(motifs.size() - 1).getStart())
                 .build();
     }
 
