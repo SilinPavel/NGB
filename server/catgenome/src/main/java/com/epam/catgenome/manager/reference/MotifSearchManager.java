@@ -136,8 +136,8 @@ public class MotifSearchManager {
     }
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request, final Reference reference) {
-        final Chromosome chromosome = loadChrById(reference, request.getChromosomeId());
-        Assert.isTrue(request.getEndPosition() != null && request.getEndPosition() <= chromosome.getSize(),
+        final Chromosome chromosome = fetchChromosomeById(reference, request.getChromosomeId());
+        Assert.isTrue(request.getEndPosition() <= chromosome.getSize(),
                 getMessage(MessagesConstants.ERROR_POSITION_OUT_OF_RANGE, request.getEndPosition()));
         final boolean includeSequence = request.getIncludeSequence() == null
                         ? defaultIncludeSequence
@@ -180,7 +180,7 @@ public class MotifSearchManager {
     }
 
     private MotifSearchResult searchChromosomeMotifs(final MotifSearchRequest request, final Reference reference) {
-        final Chromosome chromosome = loadChrById(reference, request.getChromosomeId());
+        final Chromosome chromosome = fetchChromosomeById(reference, request.getChromosomeId());
         Assert.isTrue(request.getEndPosition() == null || request.getEndPosition() <= chromosome.getSize(),
                 getMessage(MessagesConstants.ERROR_POSITION_OUT_OF_RANGE, request.getEndPosition()));
         final int pageSize = request.getPageSize() == null || request.getPageSize() <= 0
@@ -245,7 +245,7 @@ public class MotifSearchManager {
     private MotifSearchResult searchWholeGenomeMotifs(final MotifSearchRequest request, final Reference reference) {
         final int pageSize = request.getPageSize() == null ? defaultPageSize : request.getPageSize();
         int start = request.getStartPosition() == null ? 0 : request.getStartPosition();
-        Chromosome chromosome = loadChrById(reference, request.getChromosomeId());
+        Chromosome chromosome = fetchChromosomeById(reference, request.getChromosomeId());
         long chrId = chromosome.getId();
         final int end = request.getEndPosition() == null ? chromosome.getSize() : request.getEndPosition();
         if (end < chromosome.getSize()) {
@@ -297,7 +297,7 @@ public class MotifSearchManager {
         return null;
     }
 
-    private Chromosome loadChrById(final Reference reference, final Long chromosomeId) {
+    private Chromosome fetchChromosomeById(final Reference reference, final Long chromosomeId) {
         if (chromosomeId == null) {
             return getFirstChromosomeFromGenome(reference.getId());
         }
