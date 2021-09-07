@@ -137,7 +137,7 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request, final Reference reference) {
         final Chromosome chromosome = loadChrById(reference, request.getChromosomeId());
-        Assert.isTrue(request.getEndPosition() != null && request.getEndPosition() <= chromosome.getSize(),
+        Assert.isTrue(request.getEndPosition() <= chromosome.getSize(),
                 getMessage(MessagesConstants.ERROR_POSITION_OUT_OF_RANGE, request.getEndPosition()));
         final boolean includeSequence = request.getIncludeSequence() == null
                         ? defaultIncludeSequence
