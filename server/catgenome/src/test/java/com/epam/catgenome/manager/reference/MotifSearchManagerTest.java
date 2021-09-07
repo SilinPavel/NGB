@@ -110,20 +110,6 @@ public class MotifSearchManagerTest {
         Assert.assertEquals(expectedSequence, search.getResult().get(0).getSequence());
     }
 
-    @Test(expected=IllegalArgumentException.class)
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public void searchRegionMotifsShouldFailWithoutGettingEnd() throws IOException {
-        final MotifSearchRequest testRequest = MotifSearchRequest.builder()
-                .referenceId(testReference.getId())
-                .chromosomeId(testChromosome.getId())
-                .startPosition(0)
-                .endPosition(null)
-                .searchType(MotifSearchType.REGION)
-                .motif("acgt")
-                .build();
-        final MotifSearchResult search = motifSearchManager.search(testRequest);
-    }
-
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void searchChromosomeMotifsBounds() throws IOException {
