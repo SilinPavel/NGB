@@ -89,7 +89,7 @@ public class MotifSearchManagerBaseTest {
     }
 
     @Test
-    public void searchRegionMotifsReference() {
+    public void searchRegionMotifsInReference() {
 
         final int testStart = 9000;
         final int testEnd = 10000;
@@ -117,7 +117,30 @@ public class MotifSearchManagerBaseTest {
     }
 
     @Test
-    public void searchChromosomeMotifsReference() {
+    public void searchRegionMotifsReturnsEmptyValidRespondWhenMatchesNotFound() {
+
+        final int testStart = 1000;
+        final int testEnd = 1050;
+        final long chromosomeID = 0L;
+
+        final MotifSearchRequest testRequest = MotifSearchRequest.builder()
+                .referenceId(refTestID)
+                .chromosomeId(chromosomeID)
+                .startPosition(testStart)
+                .endPosition(testEnd)
+                .includeSequence(true)
+                .searchType(MotifSearchType.REGION)
+                .motif("acgttcgaacgttcga")
+                .build();
+
+        final MotifSearchResult search = mockedMotifSearchManager.search(testRequest);
+        Assert.assertEquals(0, search.getResult().size());
+        Assert.assertEquals(0, search.getPageSize().longValue());
+        Assert.assertEquals(testStart + 1, search.getPosition().longValue());
+    }
+
+    @Test
+    public void searchChromosomeMotifsInReference() {
 
         final int testStart = 1;
         final int pageSize = 10000;
