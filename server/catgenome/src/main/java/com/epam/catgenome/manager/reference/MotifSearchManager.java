@@ -298,11 +298,8 @@ public class MotifSearchManager {
     }
 
     private Chromosome fetchChromosomeById(final Reference reference, final Long chromosomeId) {
-        if (chromosomeId == null) {
-            return reference.getChromosomes().get(0);
-        }
         return reference.getChromosomes().stream()
-                .filter(chr -> chromosomeId.equals(chr.getId()))
+                .filter(chr -> chromosomeId == null || chromosomeId.equals(chr.getId()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException(
                         getMessage(MessagesConstants.ERROR_WRONG_CHROMOSOME_ID, chromosomeId)));
