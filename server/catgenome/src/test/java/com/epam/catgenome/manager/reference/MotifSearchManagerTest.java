@@ -1,3 +1,27 @@
+/*
+ * MIT License
+ *
+ * Copyright (c) 2021 EPAM Systems
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 package com.epam.catgenome.manager.reference;
 
 import com.epam.catgenome.controller.vo.registration.ReferenceRegistrationRequest;
@@ -8,7 +32,6 @@ import com.epam.catgenome.entity.reference.motif.MotifSearchRequest;
 import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
 import com.epam.catgenome.entity.reference.motif.MotifSearchType;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
-import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,6 +41,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.Set;
@@ -25,7 +49,8 @@ import java.util.stream.Collectors;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"classpath:applicationContext-test.xml"})
-public class MotifSearchManagerTestSuccess {
+@Transactional
+public class MotifSearchManagerTest {
 
     @Autowired
     private MotifSearchManager motifSearchManager;
@@ -41,41 +66,29 @@ public class MotifSearchManagerTestSuccess {
     private static final String TEST_WG_PATH = "classpath:templates/Test_wg.fa";
 
     private Resource resource;
-    private Reference referenceOne;
-    private Reference referenceTwo;
     private long idRef;
     private long idChr;
     private long idRefTwo;
     private long idChrTwo;
 
     @Before
-    public void registerFileOne() throws IOException {
+    public void registerFilesForTest() throws IOException {
         resource = context.getResource(A3_FA_PATH);
         ReferenceRegistrationRequest request = new ReferenceRegistrationRequest();
         request.setName("A3.fa");
         request.setPath(resource.getFile().getPath());
         request.setType(BiologicalDataItemResourceType.FILE);
-        referenceOne = referenceManager.registerGenome(request);
-        idRef = referenceOne.getId();
-        idChr = referenceOne.getChromosomes().get(0).getId();
-    }
-
-    @Before
-    public void registerFileTwo() throws IOException {
+        Reference reference = referenceManager.registerGenome(request);
+        idRef = reference.getId();
+        idChr = reference.getChromosomes().get(0).getId();
         resource = context.getResource(HP_GENOME_PATH);
-        ReferenceRegistrationRequest request = new ReferenceRegistrationRequest();
+        request = new ReferenceRegistrationRequest();
         request.setName("hp.genome.fa");
         request.setPath(resource.getFile().getPath());
         request.setType(BiologicalDataItemResourceType.FILE);
-        referenceTwo = referenceManager.registerGenome(request);
-        idRefTwo = referenceTwo.getId();
-        idChrTwo = referenceTwo.getChromosomes().get(1).getId();
-    }
-
-    @After
-    public void unregisterFiles() throws IOException {
-        referenceManager.unregisterGenome(referenceOne.getId());
-        referenceManager.unregisterGenome(referenceTwo.getId());
+        reference = referenceManager.registerGenome(request);
+        idRefTwo = reference.getId();
+        idChrTwo = reference.getChromosomes().get(1).getId();
     }
 
     @Test
@@ -126,7 +139,7 @@ public class MotifSearchManagerTestSuccess {
     }
 
     @Test
-    public void getEmptyPositionForLargeNumberOfResults() {
+    public void checkThatPositionIsNullWhenWeSearchForLargeNumberOfResults() {
         MotifSearchRequest att = MotifSearchRequest.builder()
                 .referenceId(idRefTwo)
                 .startPosition(1)
@@ -138,10 +151,12 @@ public class MotifSearchManagerTestSuccess {
                 .build();
         MotifSearchResult search = motifSearchManager.search(att);
         Assert.assertNull(search.getPosition());
+        Assert.assertFalse(search.getResult().isEmpty());
     }
 
     @Test
-    public void getResultsFromTwoChrWhereRightDataOnlyInFirstChr() throws IOException {
+    public void checkThatPositionIsNullWhenWeSearchFullGenomeButDataOnlyInFirstChrTest()
+            throws IOException {
         resource = context.getResource(TEST_WG_PATH);
         ReferenceRegistrationRequest request = new ReferenceRegistrationRequest();
         request.setName("Test_wg.fa");
