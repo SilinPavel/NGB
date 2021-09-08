@@ -140,7 +140,7 @@ public class MotifSearchManagerBaseTest {
     }
 
     @Test
-    public void searchChromosomeMotifsInReference() {
+    public void searchChromosomeMotifsShouldResultWithTheSameResultWhenBufferVaried() {
 
         final int testStart = 1;
         final int pageSize = 10000;
