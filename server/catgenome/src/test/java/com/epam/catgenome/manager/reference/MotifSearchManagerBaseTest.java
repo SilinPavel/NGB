@@ -96,7 +96,8 @@ public class MotifSearchManagerBaseTest {
     public void searchChromosomeMotifsReference() {
 
         final int testStart = 1;
-        final int pageSize = 1;
+        final int pageSize = 10000;
+        final int expectedResultSize = 3630;
         final int testEnd = testChrSequences.get(0L).length;
         final long chromosomeID = 0L;
 
@@ -107,14 +108,14 @@ public class MotifSearchManagerBaseTest {
                 .endPosition(testEnd)
                 .includeSequence(true)
                 .searchType(MotifSearchType.CHROMOSOME)
-                .motif("acrywagt")//"acgtrytatcgt")
+                .motif("acrywagt")
                 .pageSize(pageSize)
                 .slidingWindow(15)
                 .build();
 
         ReflectionTestUtils.setField(mockedMotifSearchManager, "bufferSize", 5000000);
         final MotifSearchResult searchWithNormalBuffer = mockedMotifSearchManager.search(testRequest);
-
+        Assert.assertEquals(expectedResultSize, searchWithNormalBuffer.getResult().size());
         IntStream.iterate(111, i -> i + 123).limit(10).forEach(i -> {
             ReflectionTestUtils.setField(mockedMotifSearchManager, "bufferSize", i);
             final MotifSearchResult searchWithSmallBuffer = mockedMotifSearchManager.search(testRequest);
