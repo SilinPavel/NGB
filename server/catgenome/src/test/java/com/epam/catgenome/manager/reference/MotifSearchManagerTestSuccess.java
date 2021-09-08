@@ -38,6 +38,7 @@ public class MotifSearchManagerTestSuccess {
 
     private static final String A3_FA_PATH = "classpath:templates/A3.fa";
     private static final String HP_GENOME_PATH = "classpath:templates/reference/hp.genome.fa";
+    private static final String TEST_WG_PATH = "classpath:templates/Test_wg.fa";
 
     private Resource resource;
     private Reference referenceOne;
@@ -131,6 +132,29 @@ public class MotifSearchManagerTestSuccess {
                 .startPosition(1)
                 .chromosomeId(idChrTwo)
                 .motif("AAC")
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .pageSize(10000)
+                .strand(StrandSerializable.POSITIVE)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(att);
+        Assert.assertNull(search.getPosition());
+    }
+
+    @Test
+    public void getResultsFromTwoChrWhereRightDataOnlyInFirstChr() throws IOException {
+        resource = context.getResource(TEST_WG_PATH);
+        ReferenceRegistrationRequest request = new ReferenceRegistrationRequest();
+        request.setName("Test_wg.fa");
+        request.setPath(resource.getFile().getPath());
+        request.setType(BiologicalDataItemResourceType.FILE);
+        Reference reference = referenceManager.registerGenome(request);
+        idRef = reference.getId();
+        idChr = reference.getChromosomes().get(0).getId();
+        MotifSearchRequest att = MotifSearchRequest.builder()
+                .referenceId(idRef)
+                .startPosition(1)
+                .chromosomeId(idChr)
+                .motif("CCC")
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(10000)
                 .strand(StrandSerializable.POSITIVE)
