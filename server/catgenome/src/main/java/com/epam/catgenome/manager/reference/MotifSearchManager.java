@@ -299,18 +299,13 @@ public class MotifSearchManager {
 
     private Chromosome fetchChromosomeById(final Reference reference, final Long chromosomeId) {
         if (chromosomeId == null) {
-            return getFirstChromosomeFromGenome(reference.getId());
+            return reference.getChromosomes().get(0);
         }
-        for (Chromosome chr : reference.getChromosomes()) {
-            if (chromosomeId.equals(chr.getId())) {
-                return chr;
-            }
-        }
-        throw new IllegalStateException(getMessage(MessagesConstants.ERROR_WRONG_CHROMOSOME_ID, chromosomeId));
-    }
-
-    private Chromosome getFirstChromosomeFromGenome(final Long referenceId) {
-        return referenceGenomeManager.loadChromosomes(referenceId).get(0);
+        return reference.getChromosomes().stream()
+                .filter(chr -> chromosomeId.equals(chr.getId()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        getMessage(MessagesConstants.ERROR_WRONG_CHROMOSOME_ID, chromosomeId)));
     }
 
     private List<Chromosome> getChromosomesOfGenome(final Long referenceId) {
