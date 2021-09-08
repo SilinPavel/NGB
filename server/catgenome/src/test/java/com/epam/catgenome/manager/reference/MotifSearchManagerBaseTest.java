@@ -14,9 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -38,9 +36,6 @@ public class MotifSearchManagerBaseTest {
 
     private static final String TEST_REF_NAME = "//dm606.X.fa";
 
-    @Autowired
-    ApplicationContext context;
-
     @Mock
     private ReferenceManager mockedReferenceManager;
 
@@ -56,30 +51,30 @@ public class MotifSearchManagerBaseTest {
 
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws IOException, ClassNotFoundException {
         MockitoAnnotations.initMocks(this);
-        final Resource resource = context.getResource("classpath:templates");
         chromosomeTestNames = new HashMap<>();
         testChrSequences = new HashMap<>();
-        testChrSequences.put(0L, readFirstChromosome(resource.getFile().getAbsolutePath(), TEST_REF_NAME));
+        testChrSequences.put(0L,
+                readFirstChromosome(new ClassPathResource("templates").getFile().getAbsolutePath(), TEST_REF_NAME));
         testChrSequences.put(1L, reverse(testChrSequences.get(0L)));
-        chromosomeTestNames.put(0L,"A");
-        chromosomeTestNames.put(1L,"B");
+        chromosomeTestNames.put(0L, "A");
+        chromosomeTestNames.put(1L, "B");
         mockFetchChromosomes();
+        mockSequenceSource();
     }
 
     @Test
-    public void searchRegionMotifsReference() throws IOException {
+    public void searchRegionMotifsReference() {
 
         final int testStart = 9000;
         final int testEnd = 10000;
         final int testMotifStart = 9100;
         final int testMotifEnd = 9200;
         final long chromosomeID = 0L;
-        final String testMotif =
-                new String(testChrSequences.get(chromosomeID)).substring(testMotifStart, testMotifEnd + 1);
 
-        mockSequenceSource(testStart, testEnd, chromosomeID);
+        final String testMotif =
+                new String(testChrSequences.get(chromosomeID)).substring(testMotifStart - 1, testMotifEnd);
 
         final MotifSearchRequest testRequest = MotifSearchRequest.builder()
                 .referenceId(refTestID)
@@ -90,6 +85,7 @@ public class MotifSearchManagerBaseTest {
                 .searchType(MotifSearchType.REGION)
                 .motif(testMotif)
                 .build();
+
         final MotifSearchResult search = mockedMotifSearchManager.search(testRequest);
         Assert.assertThat(testMotif, IsEqualIgnoringCase.equalToIgnoringCase(search.getResult().get(0).getSequence()));
         Assert.assertEquals(testMotifStart, search.getResult().get(0).getStart());
@@ -97,15 +93,12 @@ public class MotifSearchManagerBaseTest {
     }
 
     @Test
-    public void searchChromosomeMotifsReference() throws IOException {
+    public void searchChromosomeMotifsReference() {
 
         final int testStart = 1;
+        final int pageSize = 1;
         final int testEnd = testChrSequences.get(0L).length;
         final long chromosomeID = 0L;
-
-        ReflectionTestUtils.setField(mockedMotifSearchManager, "bufferSize", 50);
-
-        mockSequenceSource(testStart, testEnd, chromosomeID);
 
         final MotifSearchRequest testRequest = MotifSearchRequest.builder()
                 .referenceId(refTestID)
@@ -114,14 +107,19 @@ public class MotifSearchManagerBaseTest {
                 .endPosition(testEnd)
                 .includeSequence(true)
                 .searchType(MotifSearchType.CHROMOSOME)
-                .motif("acgtrytatcgt")
-                .pageSize(1000)
+                .motif("acrywagt")//"acgtrytatcgt")
+                .pageSize(pageSize)
                 .slidingWindow(15)
                 .build();
-//        final MotifSearchResult searchWithSmallBuffer = mockedMotifSearchManager.search(testRequest);
-//        final MotifSearchResult searchWithNormalBuffer = motifSearchManager.search(testRequest);
-//        Assert.assertEquals( searchWithNormalBuffer.getResult().size(), searchWithSmallBuffer.getResult().size());
 
+        ReflectionTestUtils.setField(mockedMotifSearchManager, "bufferSize", 5000000);
+        final MotifSearchResult searchWithNormalBuffer = mockedMotifSearchManager.search(testRequest);
+
+        IntStream.iterate(111, i -> i + 123).limit(10).forEach(i -> {
+            ReflectionTestUtils.setField(mockedMotifSearchManager, "bufferSize", i);
+            final MotifSearchResult searchWithSmallBuffer = mockedMotifSearchManager.search(testRequest);
+            Assert.assertEquals(searchWithNormalBuffer.getResult().size(), searchWithSmallBuffer.getResult().size());
+        });
     }
 
     private static byte[] reverse(final byte[] seq) {
@@ -134,18 +132,23 @@ public class MotifSearchManagerBaseTest {
         return copiedSeq;
     }
 
-    private void mockSequenceSource(final int start, final int end, final long chrID) throws IOException {
+    private void mockSequenceSource() throws IOException {
         Mockito.when(mockedReferenceManager.getSequenceByteArray(
-                        Mockito.eq(start), Mockito.eq(end),
-                        (Reference) Mockito.anyObject(), Mockito.eq(chromosomeTestNames.get(chrID))))
-                .thenReturn(Arrays.copyOfRange(testChrSequences.get(chrID), start, end + 1));
+                        Mockito.anyInt(), Mockito.anyInt(),
+                        (Reference) Mockito.anyObject(), Mockito.anyString()))
+                .thenAnswer(invocation ->
+                        Arrays.copyOfRange(
+                                testChrSequences.get(
+                                        fetchChromosomeIdByName(invocation.getArgumentAt(3, String.class))),
+                                invocation.getArgumentAt(0, Integer.class) - 1,
+                                invocation.getArgumentAt(1, Integer.class) - 1));
     }
 
-    private void mockFetchChromosomes() throws IOException {
+    private void mockFetchChromosomes() {
         final List<Chromosome> testChromosomes = Arrays.asList(
                 new Chromosome(chromosomeTestNames.get(0L), testChrSequences.get(0L).length),
                 new Chromosome(chromosomeTestNames.get(1L), testChrSequences.get(1L).length));
-        IntStream.rangeClosed(0,1).forEachOrdered(i -> testChromosomes.get(i).setId((long)i));
+        IntStream.rangeClosed(0, 1).forEachOrdered(i -> testChromosomes.get(i).setId((long)i));
 
         Mockito.when(mockedReferenceGenomeManager.loadChromosomes(refTestID))
                 .thenReturn(testChromosomes);
@@ -158,5 +161,14 @@ public class MotifSearchManagerBaseTest {
         return Files.readAllLines(Paths.get(pathToDirectory, pathToFastaFile)).stream()
                 .skip(1)
                 .collect(Collectors.joining("")).getBytes(StandardCharsets.UTF_8);
+    }
+
+    private Long fetchChromosomeIdByName(final String name) {
+        return chromosomeTestNames.entrySet()
+                .stream()
+                .filter(e -> e.getValue().equals(name))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(IllegalStateException::new);
     }
 }
