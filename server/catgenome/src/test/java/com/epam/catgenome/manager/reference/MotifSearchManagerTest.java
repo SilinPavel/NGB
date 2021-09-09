@@ -63,8 +63,8 @@ public class MotifSearchManagerTest {
     private MotifSearchManager motifSearchManager;
 
     private static final String TEST_REF_NAME = "//dm606.X.fa";
+    private static final String CHROMOSOME_NAME = "X";
     private Resource resource;
-    private String chromosomeName = "X";
     private Reference testReference;
     private Chromosome testChromosome;
     private int motifSearchManagerBufferSize;
@@ -80,7 +80,7 @@ public class MotifSearchManagerTest {
         testReference = referenceManager.registerGenome(request);
         List<Chromosome> chromosomeList = testReference.getChromosomes();
         for (Chromosome chromosome : chromosomeList) {
-            if (chromosome.getName().equals(chromosomeName)) {
+            if (chromosome.getName().equals(CHROMOSOME_NAME)) {
                 testChromosome = chromosome;
                 break;
             }
@@ -142,6 +142,30 @@ public class MotifSearchManagerTest {
                 .build();
         final MotifSearchResult search = motifSearchManager.search(testRequest);
         Assert.assertEquals(expectedSequence, search.getResult().get(0).getSequence());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void searchRegionMotifsReturnsEmptyValidRespondWhenMatchesNotFound() {
+
+        final int testStart = 1000;
+        final int testEnd = 1050;
+        final String testMotif = "acgttcgaacgttcga";
+
+        final MotifSearchRequest testRequest = MotifSearchRequest.builder()
+                .referenceId(testReference.getId())
+                .chromosomeId(testChromosome.getId())
+                .startPosition(testStart)
+                .endPosition(testEnd)
+                .includeSequence(true)
+                .searchType(MotifSearchType.REGION)
+                .motif(testMotif)
+                .build();
+
+        final MotifSearchResult search = motifSearchManager.search(testRequest);
+        Assert.assertEquals(0, search.getResult().size());
+        Assert.assertEquals(0, search.getPageSize().longValue());
+        Assert.assertEquals(testStart + 1, search.getPosition().longValue());
     }
 
     @Test
@@ -231,5 +255,4 @@ public class MotifSearchManagerTest {
             Assert.assertEquals(searchWithNormalBuffer.getResult().size(), searchWithSmallBuffer.getResult().size());
         });
     }
-
 }
