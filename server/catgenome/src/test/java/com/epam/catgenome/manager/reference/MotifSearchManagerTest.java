@@ -30,6 +30,7 @@ import com.epam.catgenome.entity.reference.Reference;
 import com.epam.catgenome.entity.reference.motif.MotifSearchRequest;
 import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
 import com.epam.catgenome.entity.reference.motif.MotifSearchType;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,12 +40,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.io.Resource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.IntStream;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration({"classpath:applicationContext-test.xml"})
@@ -64,9 +67,11 @@ public class MotifSearchManagerTest {
     private String chromosomeName = "X";
     private Reference testReference;
     private Chromosome testChromosome;
+    private int motifSearchManagerBufferSize;
 
     @Before
     public void setup() throws IOException {
+        motifSearchManagerBufferSize = (int)ReflectionTestUtils.getField(motifSearchManager, "bufferSize");
         resource = context.getResource("classpath:templates");
         File fastaFile = new File(resource.getFile().getAbsolutePath() + TEST_REF_NAME);
 
@@ -80,6 +85,11 @@ public class MotifSearchManagerTest {
                 break;
             }
         }
+    }
+
+    @After
+    public void restoreMotifSearchManagerBufferSize() {
+        ReflectionTestUtils.setField(motifSearchManager, "bufferSize", motifSearchManagerBufferSize);
     }
 
     @Test
@@ -183,6 +193,43 @@ public class MotifSearchManagerTest {
                 .build();
         final MotifSearchResult search = motifSearchManager.search(testRequest);
         Assert.assertEquals(testMotif, search.getResult().get(0).getSequence());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void searchChromosomeMotifsShouldResultWithTheSameResultWhenBufferVaried() {
+
+        final int testStart = 1;
+        final int testEnd = 1000000;
+        final int pageSize = 10000;
+        final int slidingWindow = 15;
+        final int expectedResultSize = 160;
+        final int initialTestBufferSize = 50;
+        final int testBufferSizeStep = 123;
+        final int numberOfBufferSteps = 5;
+        final String testMotif = "acrywagt";
+
+
+        final MotifSearchRequest testRequest = MotifSearchRequest.builder()
+                .referenceId(testReference.getId())
+                .chromosomeId(testChromosome.getId())
+                .startPosition(testStart)
+                .endPosition(testEnd)
+                .includeSequence(true)
+                .searchType(MotifSearchType.CHROMOSOME)
+                .motif(testMotif)
+                .pageSize(pageSize)
+                .slidingWindow(slidingWindow)
+                .build();
+
+        final MotifSearchResult searchWithNormalBuffer = motifSearchManager.search(testRequest);
+        Assert.assertEquals(expectedResultSize, searchWithNormalBuffer.getResult().size());
+
+        IntStream.iterate(initialTestBufferSize, i -> i + testBufferSizeStep).limit(numberOfBufferSteps).forEach(i -> {
+            ReflectionTestUtils.setField(motifSearchManager, "bufferSize", i);
+            final MotifSearchResult searchWithSmallBuffer = motifSearchManager.search(testRequest);
+            Assert.assertEquals(searchWithNormalBuffer.getResult().size(), searchWithSmallBuffer.getResult().size());
+        });
     }
 
 }
