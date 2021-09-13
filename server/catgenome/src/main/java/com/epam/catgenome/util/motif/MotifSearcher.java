@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-package com.epam.catgenome.util;
+package com.epam.catgenome.util.motif;
 
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
@@ -70,31 +70,48 @@ public final class MotifSearcher {
     }
 
     /**
+     * Converts specified IUPAC regex to the reversed complement nucleotide regex
+     *
+     * @param regex IUPAC nucleotide regex
+     * @return plain nucleotide regex
+     */
+    public static String convertIupactoComplementReversedRegex(final String regex) {
+        StringBuilder result = new StringBuilder();
+        for (int i = 0; i < regex.length(); i++) {
+            result.append(IupacRegex.getComplementRegexByIupacLetter(regex.substring(i,i+1)));
+        }
+        RegexReverser.reverseRegex(result);
+        return result.toString();
+    }
+
+    /**
      * IUPAC Ambiguity codes translated into regex, using java syntax
      * Source: http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html
      */
     private enum IupacRegex {
 
-        G("g"),
-        A("a"),
-        T("t"),
-        C("c"),
-        R("[rga]"),
-        Y("[ytc]"),
-        M("[mac]"),
-        K("[kgt]"),
-        S("[sgc]"),
-        W("[wat]"),
-        H("[hact]"),
-        B("[bgtc]"),
-        V("[vgca]"),
-        D("[dgat]"),
-        N(".");
+        G("g", "c"),
+        A("a", "t"),
+        T("t", "a"),
+        C("c", "g"),
+        R("[rga]", "[yct]"),
+        Y("[ytc]", "[rag]"),
+        M("[mac]", "[ktg]"),
+        K("[kgt]", "[mca]"),
+        S("[sgc]", "[sgc]"),
+        W("[wat]", "[wat]"),
+        H("[hact]", "[dtga]"),
+        B("[bgtc]", "[vcag]"),
+        V("[vgca]", "[bcgt]"),
+        D("[dgat]", "[hcta]"),
+        N(".", ".");
 
         private final String regex;
+        private final String complementRegex;
 
-        IupacRegex(final String regex) {
+        IupacRegex(final String regex, final String complementRegex){
             this.regex = regex;
+            this.complementRegex = complementRegex;
         }
 
         private static String getRegexByIupacLetter(final String letter) {
@@ -103,6 +120,15 @@ public final class MotifSearcher {
                     .findFirst()
                     .map(v -> v.regex)
                     .orElseGet(() -> letter.toLowerCase(Locale.US));
+        }
+
+        public static String getComplementRegexByIupacLetter(final String letter) {
+            return Arrays.stream(values())
+                    .filter(v->v.toString().equalsIgnoreCase(letter))
+                    .findFirst()
+                    .map(v->v.complementRegex)
+                    .orElseGet(()->letter.toLowerCase(Locale.US));
+
         }
     }
 }

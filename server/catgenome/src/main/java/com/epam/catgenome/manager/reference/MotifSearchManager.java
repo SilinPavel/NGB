@@ -34,7 +34,7 @@ import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
 import com.epam.catgenome.entity.reference.motif.MotifSearchType;
 import com.epam.catgenome.entity.track.Track;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
-import com.epam.catgenome.util.MotifSearcher;
+import com.epam.catgenome.util.motif.MotifSearcher;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

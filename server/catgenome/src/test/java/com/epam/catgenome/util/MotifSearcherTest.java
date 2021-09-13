@@ -26,6 +26,7 @@ package com.epam.catgenome.util;
 
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
+import com.epam.catgenome.util.motif.MotifSearcher;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -91,6 +92,21 @@ public class MotifSearcherTest {
         String testRegex = "atcgrYmKsWhBvDn[ac]+";
         String expectedResult = "atcg[rga][ytc][mac][kgt][sgc][wat][hact][bgtc][vgca][dgat].[ac]+";
         Assert.assertEquals(expectedResult, MotifSearcher.convertIupacToRegex(testRegex));
+    }
+
+    @Test
+    public void convertIupactoComplementReversedRegexTest(){
+        String testRegex1 = "a[^a[tcg]rY]mK{23}sn[ac]+";
+        String expectedResult1 = "[gt]+.[cgs][acm]{23}[gtk][^[gar][tcy][cga]t]t";
+        Assert.assertEquals(expectedResult1, MotifSearcher.convertIupactoComplementReversedRegex(testRegex1));
+
+        String testRegex2 = "a+?c[gt]*?yr{2,}";
+        String expectedResult2 = "[tcy]{2,}[gar][ac]*?gt+?";
+        Assert.assertEquals(expectedResult2, MotifSearcher.convertIupactoComplementReversedRegex(testRegex2));
+
+        String testRegex3 = "(ac)|(tc)|[tcc]{12}";
+        String expectedResult3 = "[gga]{12}|(ga)|(gt)";
+        Assert.assertEquals(expectedResult3, MotifSearcher.convertIupactoComplementReversedRegex(testRegex3));
     }
 
     @Test
