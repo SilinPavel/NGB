@@ -28,10 +28,13 @@ import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -50,7 +53,7 @@ public final class MotifSearcher {
                                      final int start, final boolean includeSequence) {
         return StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(
-                        new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence),
+                        getIterator(seq, regex, strand, contig, start, includeSequence),
                         Spliterator.ORDERED), false)
                 .collect(Collectors.toList());
     }
@@ -104,5 +107,56 @@ public final class MotifSearcher {
                     .map(v -> v.regex)
                     .orElseGet(() -> letter.toLowerCase(Locale.US));
         }
+    }
+
+    private static Iterator<Motif> getIterator(final byte[] seq, final String regex,
+                                        final StrandSerializable strand, final String contig,
+                                        final int start, final boolean includeSequence){
+        if(isSimpleRegex(regex)){
+            return new SimpleMotifSearchIterator(seq, addInvertedRegex(regex), strand, contig, start, includeSequence);
+        }
+        return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
+    }
+
+    private static String addInvertedRegex(String regex) {
+        char[] chars = regex.toCharArray();
+        StringBuilder invertRegex = new StringBuilder();
+        for (int i = chars.length - 1; i >= 0; i--) {
+            switch (chars[i]) {
+                case 'A':
+                    invertRegex.append('T');
+                    break;
+                case 'T':
+                    invertRegex.append('A');
+                    break;
+                case 'C':
+                    invertRegex.append('G');
+                    break;
+                case 'G':
+                    invertRegex.append('C');
+                    break;
+                case 'a':
+                    invertRegex.append('t');
+                    break;
+                case 't':
+                    invertRegex.append('a');
+                    break;
+                case 'c':
+                    invertRegex.append('g');
+                    break;
+                case 'g':
+                    invertRegex.append('c');
+            }
+        }
+        return regex + "|" + invertRegex;
+    }
+
+    private static boolean isSimpleRegex(String regex) {
+        Pattern pattern = Pattern.compile("[gatcGATC]+");
+        Matcher matcher = pattern.matcher(regex);
+        if(matcher.matches()){
+            return true;
+        }
+        return false;
     }
 }
