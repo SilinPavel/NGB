@@ -26,17 +26,18 @@ package com.epam.catgenome.util.motif;
 
 public final class IupacRegexConverter {
 
+    private static final String REVERSIBLE_MOTIF_REGEX = "^[\\w\\[\\]\\(\\)\\|\\.]+$";
+
     private IupacRegexConverter() {
     }
 
-    /**
-     * Converts specified IUPAC regex to the plain nucleotide regex
-     *
-     * @param regex IUPAC nucleotide regex
-     * @return plain nucleotide regex
-     */
-    public static String convertIupacToCombinedRegex(final String regex) {
-        return "(" + convertIupacToRegex(regex) + ")|(" + convertIupacToComplementReversedRegex(regex) + ")";
+    public static boolean validateReversibleRegex(final String regex) {
+        return regex.matches(REVERSIBLE_MOTIF_REGEX);
+    }
+
+    public static String combineIupacRegex(final String iupacRegex, final String posAlias, final String negAlias) {
+        return "(?<" + posAlias + ">" + convertIupacToRegex(iupacRegex) + ")|(?<"
+                + negAlias + ">"+ convertIupacToComplementReversedRegex(iupacRegex) + ")";
     }
 
     /**

@@ -215,6 +215,7 @@ public class MotifSearchManager {
                             .endPosition(currentEnd)
                             .includeSequence(request.getIncludeSequence())
                             .strand(request.getStrand())
+                            .slidingWindow(request.getSlidingWindow())
                             .build(),
                     reference
             ).getResult());
@@ -261,6 +262,7 @@ public class MotifSearchManager {
                             .chromosomeId(chrId)
                             .startPosition(start)
                             .endPosition(end)
+                            .slidingWindow(request.getSlidingWindow())
                             .build(),
                     reference);
         }
@@ -275,6 +277,7 @@ public class MotifSearchManager {
                             .chromosomeId(chrId)
                             .startPosition(start)
                             .endPosition(chromosome.getSize())
+                            .slidingWindow(request.getSlidingWindow())
                             .build(),
                     reference)
                     .getResult()

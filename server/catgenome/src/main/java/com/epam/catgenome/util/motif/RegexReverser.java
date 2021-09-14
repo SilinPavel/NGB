@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 
 public final class RegexReverser {
 
-    protected static final String SIMPLE_MOTIF_PATTERN = "[\\|\\{\\}\\[\\]\\?\\+\\.\\*\\(\\)[a-zA-Z0-9]]+";
     private static final String REGEX_QUANTIFIER_PATTERN = "([\\+\\*]\\?)|[\\+\\*\\?]|(\\{,?\\d+,?\\d*\\})";
     private static final char INVERTING_REGEXP_CHARACTER = '^';
 

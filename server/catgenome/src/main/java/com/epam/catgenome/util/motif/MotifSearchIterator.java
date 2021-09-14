@@ -26,7 +26,6 @@ package com.epam.catgenome.util.motif;
 
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
-import com.epam.catgenome.util.motif.MotifSearcher;
 import lombok.Value;
 
 import java.util.Deque;

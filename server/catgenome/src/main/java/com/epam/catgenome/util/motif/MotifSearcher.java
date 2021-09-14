@@ -28,8 +28,6 @@ import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 
 import java.util.Iterator;
-import java.util.Locale;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -53,7 +51,7 @@ public final class MotifSearcher {
                                      final int start, final boolean includeSequence) {
         return StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(
-                        new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence),
+                        getIterator(seq, regex, strand, contig, start, includeSequence),
                         Spliterator.ORDERED), false)
                 .collect(Collectors.toList());
     }
@@ -61,13 +59,10 @@ public final class MotifSearcher {
     public static Iterator<Motif> getIterator(final byte[] seq, final String regex,
                                               final StrandSerializable strand, final String contig,
                                               final int start, final boolean includeSequence) {
-        if (strand == null && regex.matches(RegexReverser.SIMPLE_MOTIF_PATTERN)) {
+        if (strand != null && IupacRegexConverter.validateReversibleRegex(regex)) {
             return new AdvancedMotifSearchIterator(seq, regex, contig, start, includeSequence);
         } else {
             return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
         }
     }
-
-
-
 }
