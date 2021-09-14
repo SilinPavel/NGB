@@ -46,7 +46,7 @@ public final class RegexReverser {
 
     private static void moveInvertingRegexpCharacter(final StringBuilder regex) {
         int i = 0;
-        while ( i < regex.length()) {
+        while (i < regex.length()) {
             if (regex.charAt(i) == INVERTING_REGEXP_CHARACTER) {
                 int newPosition = findPositionBeforeClosingBracket(regex, i);
                 regex.insert(newPosition, INVERTING_REGEXP_CHARACTER);
@@ -75,13 +75,13 @@ public final class RegexReverser {
     private static void moveQuantifierRegexpCharacter(final StringBuilder regex) {
         final Matcher matcher = Pattern.compile(REGEX_QUANTIFIER_PATTERN).matcher(regex);
 
-            while (matcher.find()) {
-                int newPosition = findPositionAfterOpeningBracket(regex, matcher.start());
-                for (int i = matcher.start(); i < matcher.end(); i++) {
-                    regex.insert(newPosition,regex.charAt(i));
-                    regex.deleteCharAt(i+1);
-                }
+        while (matcher.find()) {
+            int newPosition = findPositionAfterOpeningBracket(regex, matcher.start());
+            for (int i = matcher.start(); i < matcher.end(); i++) {
+                regex.insert(newPosition, regex.charAt(i));
+                regex.deleteCharAt(i + 1);
             }
+        }
     }
 
     private static int findPositionAfterOpeningBracket(final StringBuilder regex, final int start) {
@@ -106,13 +106,13 @@ public final class RegexReverser {
         bracketMapper.put(']', '[');
         bracketMapper.put('(', ')');
         bracketMapper.put(')', '(');
-        while ( i < regex.length()) {
+        while (i < regex.length()) {
             char currentLetter = regex.charAt(i);
             if (bracketMapper.containsKey(currentLetter)) {
                 regex.deleteCharAt(i);
                 regex.insert(i, bracketMapper.get(currentLetter));
             }
-            i ++;
+            i++;
         }
     }
 }

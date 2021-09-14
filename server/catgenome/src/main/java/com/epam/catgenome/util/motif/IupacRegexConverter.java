@@ -63,7 +63,7 @@ public final class IupacRegexConverter {
     public static String convertIupacToComplementReversedRegex(final String regex) {
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < regex.length(); i++) {
-            result.append(IupacRegex.getComplementRegexByIupacLetter(regex.substring(i,i+1)));
+            result.append(IupacRegex.getComplementRegexByIupacLetter(regex.substring(i, i + 1)));
         }
         RegexReverser.reverseRegex(result);
         return result.toString();
