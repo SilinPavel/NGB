@@ -67,7 +67,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
         this.includeSequence = includeSequence;
 
         final Pattern pattern =
-                Pattern.compile(MotifSearcher.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE);
+                Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE);
         if (strand == null) {
             this.positiveMatches = populatePositiveMatches(pattern.matcher(new String(seq)));
             this.negativeMatches = populateNegativeMatches(pattern.matcher(reverseAndComplement(seq)), seq.length);
