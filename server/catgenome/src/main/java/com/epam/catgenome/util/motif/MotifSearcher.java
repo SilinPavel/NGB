@@ -72,9 +72,10 @@ public final class MotifSearcher {
                     throw new IllegalArgumentException("Test number does not detected!");
             }
         }
-        //END TEST SNIPPET
-        if (strand != null && IupacRegexConverter.validateReversibleRegex(regex)) {
-            return new AdvancedMotifSearchIterator(seq, regex, contig, start, includeSequence);
+        //THE END OF TEST SNIPPET
+
+        if (strand == null && IupacRegexConverter.validateReversibleRegex(regex)) {
+            return new AlterDuoMotifSearchIterator(seq, regex, contig, start, includeSequence);
         } else {
             return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
         }
