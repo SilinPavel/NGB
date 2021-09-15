@@ -23,12 +23,13 @@ public class AlterDuoMotifSearchIterator implements Iterator<Motif> {
     public AlterDuoMotifSearchIterator(final byte[] seq, final String iupacRegex, final String contig,
                                        final int start, final boolean includeSequence) {
 
+        final String sequence = new String(seq);
         matcherPos = Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE)
-                .matcher(new String(seq));
+                .matcher(sequence);
         matcherNeg = Pattern.compile(
                         IupacRegexConverter.convertIupacToComplementReversedRegex(iupacRegex),
                         Pattern.CASE_INSENSITIVE)
-                .matcher(new String(seq));
+                .matcher(sequence);
         this.contig = contig;
         this.offset = start;
         this.includeSequence = includeSequence;
