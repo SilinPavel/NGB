@@ -120,7 +120,7 @@ public final class MotifSearcher {
 
 
     private static boolean isSimpleRegex(final String regex) {
-        final Pattern pattern = Pattern.compile("^[\\w\\[\\]()|.]+$");
+        final Pattern pattern = Pattern.compile("^[acgtACGT\\[\\]()|.]+$");
         final Matcher matcher = pattern.matcher(regex);
         return matcher.matches();
     }
