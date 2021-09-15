@@ -25,8 +25,8 @@ import java.util.List;
 @ContextConfiguration({"classpath:applicationContext-test.xml"})
 public class TemporaryTest {
 
-    private static final int[] TIME = new int[3];
-    private static final int[] SIZE = new int[3];
+    private static final int[] TIME = new int[4];
+    private static final int[] SIZE = new int[4];
     private static final int MILLIS_TO_SECOND = 1000;
 
     @Autowired
@@ -55,6 +55,7 @@ public class TemporaryTest {
         System.out.println("test 1: size="+ SIZE[0] + " duration " + TIME[0] + "second");
         System.out.println("test 2: size="+ SIZE[1] + " duration " + TIME[1] + "second");
         System.out.println("test 3: size="+ SIZE[2] + " duration " + TIME[2] + "second");
+        System.out.println("test 4: size="+ SIZE[3] + " duration " + TIME[3] + "second");
     }
 
     @Test
@@ -128,5 +129,29 @@ public class TemporaryTest {
 
         TIME[2] = (int)((System.currentTimeMillis() - l) / MILLIS_TO_SECOND);
         SIZE[2] = search.getResult().size();
+    }
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void search4() {
+
+        final String testMotif1 = "test4ttttatttcttttCttac";
+        final int pageSize = 1000;
+        final int slidingWindow = 30;
+        final long l = System.currentTimeMillis();
+
+        MotifSearchRequest testRequest = MotifSearchRequest.builder()
+                .referenceId(testReference.getId())
+                .chromosomeId(chromosomeList.get(0).getId())
+                .startPosition(0)
+                .pageSize(pageSize)
+                .includeSequence(true)
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .slidingWindow(slidingWindow)
+                .motif(testMotif1)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(testRequest);
+
+        TIME[3] = (int)((System.currentTimeMillis() - l) / MILLIS_TO_SECOND);
+        SIZE[3] = search.getResult().size();
     }
 }
