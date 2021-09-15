@@ -54,11 +54,11 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         this.offset = start;
         this.includeSequence = includeSequence;
 
-        String[] regexes = iupacRegex.split("\\|");
+        String invertedRegex = invertCurrentRegex(iupacRegex);
         final Pattern patternPositive =
-                Pattern.compile(MotifSearcher.convertIupacToRegex(regexes[0]), Pattern.CASE_INSENSITIVE);
+                Pattern.compile(MotifSearcher.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE);
         final Pattern patternNegative =
-                Pattern.compile(MotifSearcher.convertIupacToRegex(regexes[1]), Pattern.CASE_INSENSITIVE);
+                Pattern.compile(MotifSearcher.convertIupacToRegex(invertedRegex), Pattern.CASE_INSENSITIVE);
         if (strand == null) {
             this.positiveMatches = populatePositiveMatches(patternPositive.matcher(new String(seq)));
             this.negativeMatches = populatePositiveMatches(patternNegative.matcher(new String(seq)));
@@ -68,6 +68,41 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         } else {
             this.positiveMatches = new LinkedList<>();
             this.negativeMatches = populatePositiveMatches(patternNegative.matcher(new String(seq)));
+        }
+    }
+
+    private String invertCurrentRegex(final String regex) {
+        final byte[] chars = regex.getBytes();
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = checkAndRevert(chars[i]);
+        }
+        return new StringBuilder(new String(chars)).reverse().toString();
+    }
+
+    private byte checkAndRevert(final byte value) {
+        final byte openBoxBrace = '[';
+        final byte closedBoxBrace = ']';
+        final byte openRoundBrace = '(';
+        final byte closedRoundBrace = ')';
+        final byte level = '|';
+        final byte dot = '.';
+        if (value == openBoxBrace || value == closedBoxBrace
+                || value == openRoundBrace || value == closedRoundBrace
+                || value == level || value == dot) {
+            switch (value) {
+                case openBoxBrace:
+                    return closedBoxBrace;
+                case closedBoxBrace:
+                    return openBoxBrace;
+                case openRoundBrace:
+                    return closedRoundBrace;
+                case closedRoundBrace:
+                    return openRoundBrace;
+                default:
+                    return value;
+            }
+        } else {
+            return MotifSearchIterator.complement(value);
         }
     }
 

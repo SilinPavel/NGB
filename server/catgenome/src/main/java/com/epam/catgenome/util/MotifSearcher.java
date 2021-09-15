@@ -113,50 +113,15 @@ public final class MotifSearcher {
                                         final StrandSerializable strand, final String contig,
                                         final int start, final boolean includeSequence){
         if(isSimpleRegex(regex)){
-            return new SimpleMotifSearchIterator(seq, addInvertedRegex(regex), strand, contig, start, includeSequence);
+            return new SimpleMotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
         }
         return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
     }
 
-    private static String addInvertedRegex(String regex) {
-        char[] chars = regex.toCharArray();
-        StringBuilder invertRegex = new StringBuilder();
-        for (int i = chars.length - 1; i >= 0; i--) {
-            switch (chars[i]) {
-                case 'A':
-                    invertRegex.append('T');
-                    break;
-                case 'T':
-                    invertRegex.append('A');
-                    break;
-                case 'C':
-                    invertRegex.append('G');
-                    break;
-                case 'G':
-                    invertRegex.append('C');
-                    break;
-                case 'a':
-                    invertRegex.append('t');
-                    break;
-                case 't':
-                    invertRegex.append('a');
-                    break;
-                case 'c':
-                    invertRegex.append('g');
-                    break;
-                case 'g':
-                    invertRegex.append('c');
-            }
-        }
-        return regex + "|" + invertRegex;
-    }
 
-    private static boolean isSimpleRegex(String regex) {
-        Pattern pattern = Pattern.compile("[gatcGATC]+");
-        Matcher matcher = pattern.matcher(regex);
-        if(matcher.matches()){
-            return true;
-        }
-        return false;
+    private static boolean isSimpleRegex(final String regex) {
+        final Pattern pattern = Pattern.compile("^[\\w\\[\\]()|.]+$");
+        final Matcher matcher = pattern.matcher(regex);
+        return matcher.matches();
     }
 }
