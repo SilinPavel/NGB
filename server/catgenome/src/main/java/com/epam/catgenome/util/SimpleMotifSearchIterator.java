@@ -31,6 +31,8 @@ import lombok.Value;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,7 +45,7 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
     private final int offset;
     private final boolean includeSequence;
 
-    public SimpleMotifSearchIterator(final byte[] seq, final String iupacRegex,
+    public SimpleMotifSearchIterator(final byte[] seq, final String regex,
                                      final StrandSerializable strand, final String contig,
                                      final int start, final boolean includeSequence) {
         if (strand != null && strand != StrandSerializable.POSITIVE && strand != StrandSerializable.NEGATIVE) {
@@ -54,11 +56,10 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         this.offset = start;
         this.includeSequence = includeSequence;
 
-        String invertedRegex = invertCurrentRegex(iupacRegex);
-        final Pattern patternPositive =
-                Pattern.compile(MotifSearcher.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE);
-        final Pattern patternNegative =
-                Pattern.compile(MotifSearcher.convertIupacToRegex(invertedRegex), Pattern.CASE_INSENSITIVE);
+        final String iupacRegex = MotifSearcher.convertIupacToRegex(regex);
+        final String invertedRegex = invertCurrentRegex(regex.toUpperCase(Locale.ROOT));
+        final Pattern patternPositive = Pattern.compile(iupacRegex, Pattern.CASE_INSENSITIVE);
+        final Pattern patternNegative = Pattern.compile(invertedRegex, Pattern.CASE_INSENSITIVE);
         if (strand == null) {
             this.positiveMatches = populatePositiveMatches(patternPositive.matcher(new String(seq)));
             this.negativeMatches = populatePositiveMatches(patternNegative.matcher(new String(seq)));
@@ -76,7 +77,15 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         for (int i = 0; i < chars.length; i++) {
             chars[i] = checkAndRevert(chars[i]);
         }
-        return new StringBuilder(new String(chars)).reverse().toString();
+        String invertedRegex = new StringBuilder(new String(chars)).reverse().toString();
+        final Map<String, String> links = MotifSearcher.getLinks();
+        final Map<String, String> codes = MotifSearcher.getCodes();
+        for (Map.Entry<String, String> entry : links.entrySet()) {
+            if (invertedRegex.contains(entry.getKey())) {
+                invertedRegex = invertedRegex.replaceAll(entry.getKey(), codes.get(entry.getValue()));
+            }
+        }
+        return invertedRegex.toLowerCase(Locale.ROOT);
     }
 
     private byte checkAndRevert(final byte value) {
@@ -86,9 +95,17 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         final byte closedRoundBrace = ')';
         final byte level = '|';
         final byte dot = '.';
-        if (value == openBoxBrace || value == closedBoxBrace
-                || value == openRoundBrace || value == closedRoundBrace
-                || value == level || value == dot) {
+        final byte bigA = 'A';
+        final byte smallA = 'a';
+        final byte bigT = 'T';
+        final byte smallT = 't';
+        final byte bigG = 'G';
+        final byte smallG = 'g';
+        final byte bigC = 'C';
+        final byte smallC = 'c';
+        if (value == openBoxBrace || value == closedBoxBrace ||
+                value == openRoundBrace || value == closedRoundBrace ||
+                value == level || value == dot) {
             switch (value) {
                 case openBoxBrace:
                     return closedBoxBrace;
@@ -102,7 +119,12 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
                     return value;
             }
         } else {
-            return MotifSearchIterator.complement(value);
+            if (value == bigA || value == smallA || value == bigT || value == smallT ||
+                    value == bigG || value == smallG || value == bigC || value == smallC) {
+                return MotifSearchIterator.complement(value);
+            } else {
+                return value;
+            }
         }
     }
 

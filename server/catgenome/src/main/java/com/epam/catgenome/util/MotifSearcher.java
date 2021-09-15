@@ -28,9 +28,12 @@ import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.regex.Matcher;
@@ -39,6 +42,35 @@ import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 public final class MotifSearcher {
+
+    private static final Map<String, String> LINKS;
+    private static final Map<String, String> CODES_IUPAC;
+
+    static {
+        LINKS = new HashMap<>();
+        LINKS.put("R", "Y");
+        LINKS.put("Y", "R");
+        LINKS.put("M", "K");
+        LINKS.put("K", "M");
+        LINKS.put("S", "W");
+        LINKS.put("W", "S");
+        LINKS.put("H", "B");
+        LINKS.put("B", "H");
+        LINKS.put("V", "D");
+        LINKS.put("D", "V");
+        CODES_IUPAC = new HashMap<>();
+        CODES_IUPAC.put("R", "[rga]");
+        CODES_IUPAC.put("Y", "[ytc]");
+        CODES_IUPAC.put("M", "[mac]");
+        CODES_IUPAC.put("K", "[kgt]");
+        CODES_IUPAC.put("S", "[sgc]");
+        CODES_IUPAC.put("W", "[wat]");
+        CODES_IUPAC.put("H", "[hact]");
+        CODES_IUPAC.put("B", "[bgtc]");
+        CODES_IUPAC.put("V", "[vgca]");
+        CODES_IUPAC.put("D", "[dgat]");
+        CODES_IUPAC.put("N", ".");
+    }
 
     private MotifSearcher() {
     }
@@ -70,6 +102,14 @@ public final class MotifSearcher {
             result.append(IupacRegex.getRegexByIupacLetter(regex.substring(i, i + 1)));
         }
         return result.toString();
+    }
+
+    public static Map<String, String> getLinks() {
+        return Collections.unmodifiableMap(new HashMap<>(LINKS));
+    }
+
+    public static Map<String, String> getCodes() {
+        return Collections.unmodifiableMap(new HashMap<>(CODES_IUPAC));
     }
 
     /**
@@ -120,7 +160,7 @@ public final class MotifSearcher {
 
 
     private static boolean isSimpleRegex(final String regex) {
-        final Pattern pattern = Pattern.compile("^[acgtACGT\\[\\]()|.]+$");
+        final Pattern pattern = Pattern.compile("^[\\w\\[\\]()|.]+$");
         final Matcher matcher = pattern.matcher(regex);
         return matcher.matches();
     }
