@@ -65,10 +65,8 @@ public final class MotifSearcher {
                 case '1':
                     return  new MotifSearchIterator(seq, regex.substring(5), strand, contig, start, includeSequence);
                 case '2':
-                    return  new AdvancedMotifSearchIterator(seq, regex.substring(5), contig, start, includeSequence);
-                case '3':
                     return  new AlterDuoMotifSearchIterator(seq, regex.substring(5), contig, start, includeSequence);
-                case '4':
+                case '3':
                     return  new SimpleMotifSearchIterator(seq, regex.substring(5), strand, contig, start, includeSequence);
                 default:
                     throw new IllegalArgumentException("Test number does not detected!");

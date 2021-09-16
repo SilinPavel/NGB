@@ -6,6 +6,7 @@ import com.epam.catgenome.entity.reference.Reference;
 import com.epam.catgenome.entity.reference.motif.MotifSearchRequest;
 import com.epam.catgenome.entity.reference.motif.MotifSearchResult;
 import com.epam.catgenome.entity.reference.motif.MotifSearchType;
+import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,10 +26,15 @@ import java.util.List;
 @ContextConfiguration({"classpath:applicationContext-test.xml"})
 public class TemporaryTest {
 
-    private static final int[] TIME = new int[4];
-    private static final int[] SIZE = new int[4];
+    public static final int PAGE_SIZE = 1000000;
+    private static final int[] TIME = new int[3];
+    private static final int[] SIZE = new int[3];
     private static final int MILLIS_TO_SECOND = 1;
-    private static final String TEST_MOTIF = "ttttatttcttttCttac";
+//    private static final String TEST_MOTIF = "ttttatttcttttCttac";
+  //  private static final String TEST_MOTIF = "atatatat";
+    private static final String TEST_MOTIF = "acaagt";
+                                            //"acwagt"
+//    private static final String TEST_MOTIF = "ttttatttctt";
 
     @Autowired
     ApplicationContext context;
@@ -44,7 +50,8 @@ public class TemporaryTest {
 
     @Before
     public void setup() throws IOException {
-        File fastaFile = new File("C:\\Alexey_Golovenchik\\LAB-Projects\\NGB\\FASTO\\hg38.fa");
+//        File fastaFile = new File("C:\\Alexey_Golovenchik\\LAB-Projects\\NGB\\FASTO\\hg38.fa");
+        File fastaFile = context.getResource("classpath:templates/A3.fa").getFile();
         ReferenceRegistrationRequest request = new ReferenceRegistrationRequest();
         request.setPath(fastaFile.getPath());
         testReference = referenceManager.registerGenome(request);
@@ -56,14 +63,12 @@ public class TemporaryTest {
         System.out.println("test 1: size="+ SIZE[0] + " duration " + TIME[0] + "second (MotifSearchIterator)");
         System.out.println("test 2: size="+ SIZE[1] + " duration " + TIME[1] + "second (AdvancedMotifSearchIterator)");
         System.out.println("test 3: size="+ SIZE[2] + " duration " + TIME[2] + "second (AlterDuoMotifSearchIterator)");
-        System.out.println("test 4: size="+ SIZE[3] + " duration " + TIME[3] + "second (SimpleMotifSearchIterator)");
     }
 
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void search1() {
         final String testMotif1 = "test1" + TEST_MOTIF;
-        final int pageSize = 10000;
         final int slidingWindow = 30;
         final long l = System.currentTimeMillis();
 
@@ -71,11 +76,12 @@ public class TemporaryTest {
                 .referenceId(testReference.getId())
                 .chromosomeId(chromosomeList.get(0).getId())
                 .startPosition(0)
-                .pageSize(pageSize)
+                .pageSize(PAGE_SIZE)
                 .includeSequence(true)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .slidingWindow(slidingWindow)
                 .motif(testMotif1)
+                .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(testRequest);
 
@@ -83,11 +89,12 @@ public class TemporaryTest {
         SIZE[0] = search.getResult().size();
     }
 
+
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void search2() {
+
         final String testMotif1 = "test2" + TEST_MOTIF;
-        final int pageSize = 10000;
         final int slidingWindow = 30;
         final long l = System.currentTimeMillis();
 
@@ -95,7 +102,7 @@ public class TemporaryTest {
                 .referenceId(testReference.getId())
                 .chromosomeId(chromosomeList.get(0).getId())
                 .startPosition(0)
-                .pageSize(pageSize)
+                .pageSize(PAGE_SIZE)
                 .includeSequence(true)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .slidingWindow(slidingWindow)
@@ -112,7 +119,6 @@ public class TemporaryTest {
     public void search3() {
 
         final String testMotif1 = "test3" + TEST_MOTIF;
-        final int pageSize = 10000;
         final int slidingWindow = 30;
         final long l = System.currentTimeMillis();
 
@@ -120,39 +126,16 @@ public class TemporaryTest {
                 .referenceId(testReference.getId())
                 .chromosomeId(chromosomeList.get(0).getId())
                 .startPosition(0)
-                .pageSize(pageSize)
+                .pageSize(PAGE_SIZE)
                 .includeSequence(true)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .slidingWindow(slidingWindow)
                 .motif(testMotif1)
+                .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(testRequest);
 
         TIME[2] = (int)((System.currentTimeMillis() - l) / MILLIS_TO_SECOND);
         SIZE[2] = search.getResult().size();
-    }
-    @Test
-    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public void search4() {
-
-        final String testMotif1 = "test4" + TEST_MOTIF;
-        final int pageSize = 10000;
-        final int slidingWindow = 30;
-        final long l = System.currentTimeMillis();
-
-        MotifSearchRequest testRequest = MotifSearchRequest.builder()
-                .referenceId(testReference.getId())
-                .chromosomeId(chromosomeList.get(0).getId())
-                .startPosition(0)
-                .pageSize(pageSize)
-                .includeSequence(true)
-                .searchType(MotifSearchType.WHOLE_GENOME)
-                .slidingWindow(slidingWindow)
-                .motif(testMotif1)
-                .build();
-        MotifSearchResult search = motifSearchManager.search(testRequest);
-
-        TIME[3] = (int)((System.currentTimeMillis() - l) / MILLIS_TO_SECOND);
-        SIZE[3] = search.getResult().size();
     }
 }
