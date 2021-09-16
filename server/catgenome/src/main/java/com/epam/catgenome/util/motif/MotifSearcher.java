@@ -36,8 +36,6 @@ import java.util.stream.StreamSupport;
 
 public final class MotifSearcher {
 
-
-
     private MotifSearcher() {
     }
 
@@ -59,22 +57,9 @@ public final class MotifSearcher {
     public static Iterator<Motif> getIterator(final byte[] seq, final String regex,
                                               final StrandSerializable strand, final String contig,
                                               final int start, final boolean includeSequence) {
-        //TEST SNIPPET:
-        if (regex.startsWith("test")) {
-            switch (regex.charAt(4)){
-                case '1':
-                    return  new MotifSearchIterator(seq, regex.substring(5), strand, contig, start, includeSequence);
-                case '2':
-                    return  new AlterDuoMotifSearchIterator(seq, regex.substring(5), contig, start, includeSequence);
-                case '3':
-                    return  new SimpleMotifSearchIterator(seq, regex.substring(5), strand, contig, start, includeSequence);
-                default:
-                    throw new IllegalArgumentException("Test number does not detected!");
-            }
-        }
-        //THE END OF TEST SNIPPET
-
-        if (strand == null && IupacRegexConverter.validateReversibleRegex(regex)) {
+        if (IupacRegexConverter.validatePlainMotif(regex)) {
+            return new SimpleMotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
+        } else if (strand == null && IupacRegexConverter.validateReversibleRegex(regex)) {
             return new AlterDuoMotifSearchIterator(seq, regex, contig, start, includeSequence);
         } else {
             return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);

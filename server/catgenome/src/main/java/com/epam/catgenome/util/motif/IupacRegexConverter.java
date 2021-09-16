@@ -27,12 +27,17 @@ package com.epam.catgenome.util.motif;
 public final class IupacRegexConverter {
 
     private static final String REVERSIBLE_MOTIF_REGEX = "^[\\w\\[\\]\\(\\)\\|\\.]+$";
+    private static final String PLAIN_MOTIF = "^[acgtACGT]+$";
 
     private IupacRegexConverter() {
     }
 
     public static boolean validateReversibleRegex(final String regex) {
         return regex.matches(REVERSIBLE_MOTIF_REGEX);
+    }
+
+    public static boolean validatePlainMotif(final String motif) {
+        return motif.matches(PLAIN_MOTIF);
     }
 
     public static String combineIupacRegex(final String iupacRegex, final String posAlias, final String negAlias) {
