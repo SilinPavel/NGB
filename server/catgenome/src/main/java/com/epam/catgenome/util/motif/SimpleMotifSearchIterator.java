@@ -113,7 +113,7 @@ public class SimpleMotifSearchIterator implements Iterator<Motif> {
         }
         return new Motif(contig, startPosition, endPosition, strand,
                 includeSequence ? new String(Arrays.copyOfRange(
-                        sequence, currentPosition, currentPosition + positiveRegex.length)) : null);
+                        sequence, startPosition - offset, endPosition - offset + 1)) : null);
     }
 
     private String reverseComplementAddToLowerCase(final String motif){
