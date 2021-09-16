@@ -545,7 +545,7 @@ public class MotifSearchManagerTest {
 
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
-    public void checkThatResultsIsEqualsWhenUsinIupacThatMustBeSameTest() {
+    public void checkThatResultsIsEqualsWhenUsingIupacThatMustBeSameTest() {
         final String motif = "acwagt";
         final String invertedMotif = "actwgt";
         final int pageSize = 10000;

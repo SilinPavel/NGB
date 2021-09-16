@@ -72,6 +72,31 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         }
     }
 
+    @Override
+    public boolean hasNext() {
+        return !positiveMatches.isEmpty() || !negativeMatches.isEmpty();
+    }
+
+    @Override
+    public Motif next() {
+        Match match;
+        StrandSerializable currentStrand;
+        if (negativeMatches.isEmpty()) {
+            match = positiveMatches.removeFirst();
+            currentStrand = StrandSerializable.POSITIVE;
+        } else if (positiveMatches.isEmpty() || negativeMatches.peekLast().start < positiveMatches.peekFirst().start) {
+            match = negativeMatches.removeLast();
+            currentStrand = StrandSerializable.NEGATIVE;
+        } else {
+            match = positiveMatches.removeFirst();
+            currentStrand = StrandSerializable.POSITIVE;
+        }
+        if (includeSequence) {
+            return getMotif(contig, match.start, match.end, currentStrand);
+        }
+        return new Motif(contig, match.start + offset, match.end + offset, currentStrand, null);
+    }
+
     private String invertCurrentRegex(final String regex) {
         final byte[] chars = regex.getBytes();
         for (int i = 0; i < chars.length; i++) {
@@ -136,31 +161,6 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
             position = matcher.start() + 1;
         }
         return matches;
-    }
-
-    @Override
-    public boolean hasNext() {
-        return !positiveMatches.isEmpty() || !negativeMatches.isEmpty();
-    }
-
-    @Override
-    public Motif next() {
-        Match match;
-        StrandSerializable currentStrand;
-        if (negativeMatches.isEmpty()) {
-            match = positiveMatches.removeFirst();
-            currentStrand = StrandSerializable.POSITIVE;
-        } else if (positiveMatches.isEmpty() || negativeMatches.peekLast().start < positiveMatches.peekFirst().start) {
-            match = negativeMatches.removeLast();
-            currentStrand = StrandSerializable.NEGATIVE;
-        } else {
-            match = positiveMatches.removeFirst();
-            currentStrand = StrandSerializable.POSITIVE;
-        }
-        if (includeSequence) {
-            return getMotif(contig, match.start, match.end, currentStrand);
-        }
-        return new Motif(contig, match.start + offset, match.end + offset, currentStrand, null);
     }
 
     private Motif getMotif(final String contig, final int start, final int end, StrandSerializable strand) {
