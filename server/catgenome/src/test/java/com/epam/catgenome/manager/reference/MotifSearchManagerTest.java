@@ -523,8 +523,31 @@ public class MotifSearchManagerTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void checkThatResultsByIupacRegexAndRevertedRegexIsEqualsTest() {
-        final String motif = "acrywagt";
-        final String invertedMotif = "actsrygt";
+        final String motif = "acryagt";
+        final String invertedMotif = "actrygt";
+        final int pageSize = 10000;
+        MotifSearchRequest request = MotifSearchRequest.builder()
+                .referenceId(a3TestReference.getId())
+                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .motif(motif)
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .pageSize(pageSize)
+                .strand(StrandSerializable.POSITIVE)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(request);
+        request = request.toBuilder()
+                .motif(invertedMotif)
+                .strand(StrandSerializable.NEGATIVE)
+                .build();
+        MotifSearchResult searchInverted = motifSearchManager.search(request);
+        Assert.assertEquals(search.getResult().size(), searchInverted.getResult().size());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void checkThatResultsIsEqualsWhenUsinIupacThatMustBeSameTest() {
+        final String motif = "acwagt";
+        final String invertedMotif = "actwgt";
         final int pageSize = 10000;
         MotifSearchRequest request = MotifSearchRequest.builder()
                 .referenceId(a3TestReference.getId())
