@@ -60,6 +60,7 @@ public class MotifSearchManagerTest {
     public static final int START_POSITION = 50;
     public static final int END_POSITION = 1000;
     public static final int PAGE_SIZE = 100;
+    public static final int BIG_PAGE_SIZE = 10000;
 
     @Autowired
     ApplicationContext context;
@@ -501,7 +502,6 @@ public class MotifSearchManagerTest {
     @Test
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void checkThatResultsByRegexAndRevertedRegexIsEqualsTest() {
-        final int pageSize = 10000;
         final String motif = "AA[GGCCA(CAA)AT]";
         final String invertedMotif = "[AT(TTG)TGGCC]TT";
         MotifSearchRequest request = MotifSearchRequest.builder()
@@ -509,7 +509,7 @@ public class MotifSearchManagerTest {
                 .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(pageSize)
+                .pageSize(BIG_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(request);
@@ -526,13 +526,12 @@ public class MotifSearchManagerTest {
     public void checkThatResultsByIupacRegexAndRevertedRegexIsEqualsTest() {
         final String motif = "acryagt";
         final String invertedMotif = "actrygt";
-        final int pageSize = 10000;
         MotifSearchRequest request = MotifSearchRequest.builder()
                 .referenceId(a3TestReference.getId())
                 .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(pageSize)
+                .pageSize(BIG_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(request);
@@ -549,13 +548,12 @@ public class MotifSearchManagerTest {
     public void checkThatResultsIsEqualsWhenUsingIupacThatMustBeSameTest() {
         final String motif = "acwagt";
         final String invertedMotif = "actwgt";
-        final int pageSize = 10000;
         MotifSearchRequest request = MotifSearchRequest.builder()
                 .referenceId(a3TestReference.getId())
                 .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(pageSize)
+                .pageSize(BIG_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(request);
@@ -626,7 +624,7 @@ public class MotifSearchManagerTest {
                 .startPosition(1)
                 .motif(EXTENDED_TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(PAGE_SIZE)
+                .pageSize(BIG_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(att);
