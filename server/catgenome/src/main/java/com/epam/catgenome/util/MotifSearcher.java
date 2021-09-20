@@ -36,7 +36,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -45,6 +44,18 @@ public final class MotifSearcher {
 
     private static final Map<String, String> LINKS;
     private static final Map<String, String> CODES_IUPAC;
+    private static final byte OPEN_BOX_BRACE = '[';
+    private static final byte CLOSED_BOX_BRACE = ']';
+    private static final byte OPEN_ROUND_BRACE = '(';
+    private static final byte CLOSED_ROUND_BRACE = ')';
+    private static final byte CAPITAL_A = 'A';
+    private static final byte LOWERCASE_A = 'a';
+    private static final byte CAPITAL_T = 'T';
+    private static final byte LOWERCASE_T = 't';
+    private static final byte CAPITAL_G = 'G';
+    private static final byte LOWERCASE_G = 'g';
+    private static final byte CAPITAL_C = 'C';
+    private static final byte LOWERCASE_C = 'c';
 
     static {
         LINKS = new HashMap<>();
@@ -52,12 +63,12 @@ public final class MotifSearcher {
         LINKS.put("Y", "R");
         LINKS.put("M", "K");
         LINKS.put("K", "M");
-        LINKS.put("S", "S");
-        LINKS.put("W", "W");
         LINKS.put("V", "B");
         LINKS.put("B", "V");
         LINKS.put("H", "D");
         LINKS.put("D", "H");
+        LINKS.put("S", "S");
+        LINKS.put("W", "W");
         LINKS.put("N", "N");
         CODES_IUPAC = new HashMap<>();
         CODES_IUPAC.put("R", "[rga]");
@@ -113,6 +124,46 @@ public final class MotifSearcher {
         return Collections.unmodifiableMap(new HashMap<>(CODES_IUPAC));
     }
 
+    public static String invertCurrentRegex(final String regex) {
+        final byte[] chars = regex.getBytes();
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = checkAndRevert(chars[i]);
+        }
+        String invertedRegex = new StringBuilder(new String(chars)).reverse().toString();
+        final Map<String, String> links = getLinks();
+        final Map<String, String> codes = getCodes();
+        for (Map.Entry<String, String> entry : links.entrySet()) {
+            if (invertedRegex.contains(entry.getKey())) {
+                invertedRegex = invertedRegex.replaceAll(entry.getKey(), codes.get(entry.getValue()));
+            }
+        }
+        return invertedRegex.toLowerCase(Locale.ROOT);
+    }
+
+    private static byte checkAndRevert(final byte value) {
+        switch (value) {
+            case OPEN_BOX_BRACE:
+                return CLOSED_BOX_BRACE;
+            case CLOSED_BOX_BRACE:
+                return OPEN_BOX_BRACE;
+            case OPEN_ROUND_BRACE:
+                return CLOSED_ROUND_BRACE;
+            case CLOSED_ROUND_BRACE:
+                return OPEN_ROUND_BRACE;
+            case CAPITAL_A:
+            case LOWERCASE_A:
+            case CAPITAL_T:
+            case LOWERCASE_T:
+            case CAPITAL_G:
+            case LOWERCASE_G:
+            case CAPITAL_C:
+            case LOWERCASE_C:
+                return MotifSearchIterator.complement(value);
+            default:
+                return value;
+        }
+    }
+
     /**
      * IUPAC Ambiguity codes translated into regex, using java syntax
      * Source: http://www.chem.qmul.ac.uk/iubmb/misc/naseq.html
@@ -159,10 +210,8 @@ public final class MotifSearcher {
         return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
     }
 
-
     private static boolean isSimpleRegex(final String regex) {
         final Pattern pattern = Pattern.compile("^[\\w\\[\\]()|.]+$");
-        final Matcher matcher = pattern.matcher(regex);
-        return matcher.matches();
+        return pattern.matcher(regex).matches();
     }
 }

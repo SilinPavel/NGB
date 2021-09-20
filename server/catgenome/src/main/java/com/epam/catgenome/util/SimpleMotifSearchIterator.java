@@ -32,7 +32,6 @@ import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Locale;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,7 +56,7 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         this.includeSequence = includeSequence;
 
         final String iupacRegex = MotifSearcher.convertIupacToRegex(regex);
-        final String invertedRegex = invertCurrentRegex(regex.toUpperCase(Locale.ROOT));
+        final String invertedRegex = MotifSearcher.invertCurrentRegex(regex.toUpperCase(Locale.ROOT));
         final Pattern patternPositive = Pattern.compile(iupacRegex, Pattern.CASE_INSENSITIVE);
         final Pattern patternNegative = Pattern.compile(invertedRegex, Pattern.CASE_INSENSITIVE);
         if (strand == null) {
@@ -97,65 +96,9 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         return new Motif(contig, match.start + offset, match.end + offset, currentStrand, null);
     }
 
-    private String invertCurrentRegex(final String regex) {
-        final byte[] chars = regex.getBytes();
-        for (int i = 0; i < chars.length; i++) {
-            chars[i] = checkAndRevert(chars[i]);
-        }
-        String invertedRegex = new StringBuilder(new String(chars)).reverse().toString();
-        final Map<String, String> links = MotifSearcher.getLinks();
-        final Map<String, String> codes = MotifSearcher.getCodes();
-        for (Map.Entry<String, String> entry : links.entrySet()) {
-            if (invertedRegex.contains(entry.getKey())) {
-                invertedRegex = invertedRegex.replaceAll(entry.getKey(), codes.get(entry.getValue()));
-            }
-        }
-        return invertedRegex.toLowerCase(Locale.ROOT);
-    }
-
-    private byte checkAndRevert(final byte value) {
-        final byte openBoxBrace = '[';
-        final byte closedBoxBrace = ']';
-        final byte openRoundBrace = '(';
-        final byte closedRoundBrace = ')';
-        final byte level = '|';
-        final byte dot = '.';
-        final byte bigA = 'A';
-        final byte smallA = 'a';
-        final byte bigT = 'T';
-        final byte smallT = 't';
-        final byte bigG = 'G';
-        final byte smallG = 'g';
-        final byte bigC = 'C';
-        final byte smallC = 'c';
-        if (value == openBoxBrace || value == closedBoxBrace ||
-                value == openRoundBrace || value == closedRoundBrace ||
-                value == level || value == dot) {
-            switch (value) {
-                case openBoxBrace:
-                    return closedBoxBrace;
-                case closedBoxBrace:
-                    return openBoxBrace;
-                case openRoundBrace:
-                    return closedRoundBrace;
-                case closedRoundBrace:
-                    return openRoundBrace;
-                default:
-                    return value;
-            }
-        } else {
-            if (value == bigA || value == smallA || value == bigT || value == smallT ||
-                    value == bigG || value == smallG || value == bigC || value == smallC) {
-                return MotifSearchIterator.complement(value);
-            } else {
-                return value;
-            }
-        }
-    }
-
     private Deque<Match> populatePositiveMatches(final Matcher matcher) {
         int position = 0;
-        LinkedList<Match> matches = new LinkedList<>();
+        final LinkedList<Match> matches = new LinkedList<>();
         while (matcher.find(position)) {
             matches.add(new Match(matcher.start(), matcher.end() - 1));
             position = matcher.start() + 1;
@@ -163,7 +106,7 @@ public class SimpleMotifSearchIterator implements Iterator<Motif>  {
         return matches;
     }
 
-    private Motif getMotif(final String contig, final int start, final int end, StrandSerializable strand) {
+    private Motif getMotif(final String contig, final int start, final int end, final StrandSerializable strand) {
         final StringBuilder result = new StringBuilder();
         for (int i = start; i <= end; i++) {
             result.append((char) sequence[i]);

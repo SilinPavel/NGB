@@ -77,6 +77,7 @@ public class MotifSearchManagerTest {
     private static final String HP_GENOME_NAME = "//reference/hp.genome.fa";
     private static final String TEST_WG_NAME = "//Test_wg.fa";
     private static final String TEST_GENOME_MOTIF = "AAC";
+    private static final String EXTENDED_TEST_GENOME_MOTIF = "A+C";
 
     private Reference a3TestReference;
     private Reference hpGenomeTestReference;
@@ -564,6 +565,90 @@ public class MotifSearchManagerTest {
                 .build();
         MotifSearchResult searchInverted = motifSearchManager.search(request);
         Assert.assertEquals(search.getResult().size(), searchInverted.getResult().size());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void searchForSpecifiedPositionsByExtMotifShouldReturnNotEmptyResultsTest() {
+        MotifSearchRequest request = MotifSearchRequest.builder()
+                .referenceId(a3TestReference.getId())
+                .startPosition(START_POSITION)
+                .endPosition(END_POSITION)
+                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .motif(EXTENDED_TEST_GENOME_MOTIF)
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .pageSize(Integer.MAX_VALUE)
+                .strand(StrandSerializable.POSITIVE)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(request);
+        Assert.assertFalse(search.getResult().isEmpty());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void searchForSpecifiedPageSizeByExtMotifShouldReturnResultsWithSizeEqualPageSizeTest() {
+        MotifSearchRequest request = MotifSearchRequest.builder()
+                .referenceId(a3TestReference.getId())
+                .startPosition(1)
+                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .motif(EXTENDED_TEST_GENOME_MOTIF)
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .pageSize(PAGE_SIZE)
+                .strand(StrandSerializable.POSITIVE)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(request);
+        Assert.assertEquals(search.getResult().size(), (int) request.getPageSize());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void searchForLargeNumberOfResultsByExtMotifShouldReturnResultsFromSeveralChromosomesTest() {
+        MotifSearchRequest att = MotifSearchRequest.builder()
+                .referenceId(hpGenomeTestReference.getId())
+                .chromosomeId(hpGenomeTestReference.getChromosomes().get(1).getId())
+                .motif(EXTENDED_TEST_GENOME_MOTIF)
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .pageSize(PAGE_SIZE)
+                .strand(StrandSerializable.POSITIVE)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(att);
+        Set<String> chromosomes = search.getResult().stream().map(Motif::getContig)
+                .collect(Collectors.toSet());
+        Assert.assertTrue(chromosomes.size() > 1);
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void checkThatPositionIsNullWhenWeSearchByExtMotifForLargeNumberOfResultsTest() {
+        MotifSearchRequest att = MotifSearchRequest.builder()
+                .referenceId(hpGenomeTestReference.getId())
+                .chromosomeId(hpGenomeTestReference.getChromosomes().get(1).getId())
+                .startPosition(1)
+                .motif(EXTENDED_TEST_GENOME_MOTIF)
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .pageSize(PAGE_SIZE)
+                .strand(StrandSerializable.POSITIVE)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(att);
+        Assert.assertNull(search.getPosition());
+        Assert.assertFalse(search.getResult().isEmpty());
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
+    public void checkThatPositionIsNullWhenWeSearchFullGenomeByExtMotifButDataOnlyInFirstChrTest() {
+        MotifSearchRequest att = MotifSearchRequest.builder()
+                .referenceId(testWgTestReference.getId())
+                .startPosition(1)
+                .chromosomeId(testWgTestReference.getChromosomes().get(0).getId())
+                .motif("CC+")
+                .searchType(MotifSearchType.WHOLE_GENOME)
+                .pageSize(PAGE_SIZE)
+                .strand(StrandSerializable.POSITIVE)
+                .build();
+        MotifSearchResult search = motifSearchManager.search(att);
+        Assert.assertNull(search.getPosition());
+        Assert.assertFalse(search.getResult().isEmpty());
     }
 
 }
