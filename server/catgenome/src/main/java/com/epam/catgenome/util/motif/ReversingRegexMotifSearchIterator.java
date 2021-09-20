@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AlterDuoMotifSearchIterator implements Iterator<Motif> {
+public class ReversingRegexMotifSearchIterator implements Iterator<Motif> {
 
     private final Matcher positiveMatcher;
     private final Matcher negativeMatcher;
@@ -20,8 +20,8 @@ public class AlterDuoMotifSearchIterator implements Iterator<Motif> {
     private boolean posFlag;
     private boolean negFlag;
 
-    public AlterDuoMotifSearchIterator(final byte[] seq, final String iupacRegex, final String contig,
-                                       final int start, final boolean includeSequence) {
+    public ReversingRegexMotifSearchIterator(final byte[] seq, final String iupacRegex, final String contig,
+                                             final int start, final boolean includeSequence) {
 
         final String sequence = new String(seq);
         positiveMatcher = Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE)

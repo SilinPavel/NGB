@@ -60,7 +60,7 @@ public final class MotifSearcher {
         if (IupacRegexConverter.validatePlainMotif(regex)) {
             return new SimpleMotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
         } else if (strand == null && IupacRegexConverter.validateReversibleRegex(regex)) {
-            return new AlterDuoMotifSearchIterator(seq, regex, contig, start, includeSequence);
+            return new ReversingRegexMotifSearchIterator(seq, regex, contig, start, includeSequence);
         } else {
             return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
         }
