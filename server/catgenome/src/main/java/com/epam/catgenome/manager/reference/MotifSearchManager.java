@@ -137,6 +137,7 @@ public class MotifSearchManager {
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request, final Reference reference) {
         final Chromosome chromosome = fetchChromosomeById(reference, request.getChromosomeId());
+        final int pageSize = request.getPageSize() == null ? defaultPageSize : request.getPageSize();
         Assert.isTrue(request.getEndPosition() <= chromosome.getSize(),
                 getMessage(MessagesConstants.ERROR_POSITION_OUT_OF_RANGE, request.getEndPosition()));
         final boolean includeSequence = request.getIncludeSequence() == null
@@ -150,9 +151,10 @@ public class MotifSearchManager {
         final List<Motif> searchResult =
                 MotifSearcher.search(getSequence(startPosition, endPosition, reference, chromosome),
                         request.getMotif(), request.getStrand(),
-                        chromosome.getName(), startPosition, includeSequence).stream()
+                        chromosome.getName(), startPosition, includeSequence)
                         .filter(motif -> motif.getEnd() >= request.getStartPosition()
                                 && motif.getStart() <= request.getEndPosition())
+                        .limit(pageSize)
                         .collect(Collectors.toList());
 
         final int lastStart = searchResult.isEmpty()
@@ -161,7 +163,7 @@ public class MotifSearchManager {
         return MotifSearchResult.builder()
                 .result(searchResult)
                 .chromosomeId(request.getChromosomeId())
-                .pageSize(searchResult.size())
+                .pageSize(pageSize)
                 .position(lastStart < chromosome.getSize() ? lastStart + 1 : null)
                 .build();
     }
@@ -231,7 +233,7 @@ public class MotifSearchManager {
         return MotifSearchResult.builder()
                 .result(pageSizedResult)
                 .chromosomeId(request.getChromosomeId())
-                .pageSize(pageSizedResult.size())
+                .pageSize(pageSize)
                 .position(lastStartMotifPosition == null || lastStartMotifPosition.equals(chromosome.getSize())
                         ? null
                         : lastStartMotifPosition + 1)

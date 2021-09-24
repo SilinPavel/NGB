@@ -27,6 +27,7 @@ package com.epam.catgenome.util.motif;
 import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 import lombok.Value;
+import org.springframework.util.Assert;
 
 import java.util.Deque;
 import java.util.Iterator;
@@ -45,6 +46,8 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private static final byte LOWERCASE_G = 'g';
     private static final byte LOWERCASE_T = 't';
     private static final byte LOWERCASE_N = 'n';
+    private static final int MAX_SEARCH_VALUE = 1_000_000;
+    private static final String MESSAGE_TEXT = "Too many results, specify a more specific query";
 
     private final Deque<Match> positiveMatches;
     private final Deque<Match> negativeMatches;
@@ -81,8 +84,10 @@ public class MotifSearchIterator implements Iterator<Motif> {
 
     private Deque<Match> populatePositiveMatches(final Matcher matcher) {
         int position = 0;
+        int resultsCount = 0;
         LinkedList<Match> matches = new LinkedList<>();
         while (matcher.find(position)) {
+            Assert.isTrue(++resultsCount < MAX_SEARCH_VALUE, MESSAGE_TEXT);
             matches.add(new Match(matcher.start(), matcher.end() - 1));
             position = matcher.start() + 1;
         }
@@ -91,9 +96,11 @@ public class MotifSearchIterator implements Iterator<Motif> {
 
     private Deque<Match> populateNegativeMatches(final Matcher matcher, final int seqLength) {
         int position = 0;
+        int resultsCount = 0;
         LinkedList<Match> matches = new LinkedList<>();
         while (matcher.find(position)) {
-            matches.add(new Match(seqLength - matcher.end(), seqLength - matcher.start() -1));
+            Assert.isTrue(++resultsCount < MAX_SEARCH_VALUE, MESSAGE_TEXT);
+            matches.add(new Match(seqLength - matcher.end(), seqLength - matcher.start() - 1));
             position = matcher.start() + 1;
         }
         return matches;
