@@ -31,6 +31,7 @@ import lombok.Value;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -45,6 +46,8 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private static final byte LOWERCASE_G = 'g';
     private static final byte LOWERCASE_T = 't';
     private static final byte LOWERCASE_N = 'n';
+
+    private static int maxSizeResultLimit = Integer.MAX_VALUE;
 
     private final Deque<Match> positiveMatches;
     private final Deque<Match> negativeMatches;
@@ -85,6 +88,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
         while (matcher.find(position)) {
             matches.add(new Match(matcher.start(), matcher.end() - 1));
             position = matcher.start() + 1;
+            validateResultListSize(matches);
         }
         return matches;
     }
@@ -95,8 +99,15 @@ public class MotifSearchIterator implements Iterator<Motif> {
         while (matcher.find(position)) {
             matches.add(new Match(seqLength - matcher.end(), seqLength - matcher.start() -1));
             position = matcher.start() + 1;
+            validateResultListSize(matches);
         }
         return matches;
+    }
+
+    private void validateResultListSize(final List<Match> matches) {
+        if (matches.size() > maxSizeResultLimit) {
+            throw new IllegalStateException("Too many result, specify more concrete query");
+        }
     }
 
     @Override

@@ -28,10 +28,9 @@ import com.epam.catgenome.entity.reference.motif.Motif;
 import com.epam.catgenome.manager.gene.parser.StrandSerializable;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public final class MotifSearcher {
@@ -39,19 +38,18 @@ public final class MotifSearcher {
     private MotifSearcher() {
     }
 
-    public static List<Motif> search(final byte[] seq, final String regex,
-                                     final String contig, final int start, final boolean includeSequence) {
+    public static Stream<Motif> search(final byte[] seq, final String regex,
+                                       final String contig, final int start, final boolean includeSequence) {
         return search(seq, regex, null, contig, start, includeSequence);
     }
 
-    public static List<Motif> search(final byte[] seq, final String regex,
+    public static Stream<Motif> search(final byte[] seq, final String regex,
                                      final StrandSerializable strand, final String contig,
                                      final int start, final boolean includeSequence) {
         return StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(
                         getIterator(seq, regex, strand, contig, start, includeSequence),
-                        Spliterator.ORDERED), false)
-                .collect(Collectors.toList());
+                        Spliterator.ORDERED), false);
     }
 
     public static Iterator<Motif> getIterator(final byte[] seq, final String regex,
