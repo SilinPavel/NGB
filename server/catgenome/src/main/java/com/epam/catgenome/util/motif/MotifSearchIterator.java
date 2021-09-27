@@ -83,20 +83,22 @@ public class MotifSearchIterator implements Iterator<Motif> {
     }
 
     private Deque<Match> populatePositiveMatches(final Matcher matcher) {
-        return getMatchesByMather(matcher, -1);
-    }
-
-    private Deque<Match> populateNegativeMatches(final Matcher matcher, final int seqLength) {
-        return getMatchesByMather(matcher, seqLength);
-    }
-
-    private Deque<Match> getMatchesByMather(final Matcher matcher, final int seqLength) {
         int position = 0;
         LinkedList<Match> matches = new LinkedList<>();
         while (matcher.find(position)) {
             Assert.isTrue(matches.size() < maxSearchSize, MESSAGE_TEXT);
-            matches.add(seqLength == -1 ? new Match(matcher.start(), matcher.end() - 1)
-                    : new Match(seqLength - matcher.end(), seqLength - matcher.start() - 1));
+            matches.add(new Match(matcher.start(), matcher.end() - 1));
+            position = matcher.start() + 1;
+        }
+        return matches;
+    }
+
+    private Deque<Match> populateNegativeMatches(final Matcher matcher, final int seqLength) {
+        int position = 0;
+        LinkedList<Match> matches = new LinkedList<>();
+        while (matcher.find(position)) {
+            Assert.isTrue(matches.size() < maxSearchSize, MESSAGE_TEXT);
+            matches.add(new Match(seqLength - matcher.end(), seqLength - matcher.start() - 1));
             position = matcher.start() + 1;
         }
         return matches;
