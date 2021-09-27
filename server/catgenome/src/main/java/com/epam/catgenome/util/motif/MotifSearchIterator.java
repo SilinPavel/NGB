@@ -46,7 +46,6 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private static final byte LOWERCASE_G = 'g';
     private static final byte LOWERCASE_T = 't';
     private static final byte LOWERCASE_N = 'n';
-
     private static final String MESSAGE_TEXT = "Too many results, specify a more specific query";
 
     private final Deque<Match> positiveMatches;
@@ -56,7 +55,6 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private final int offset;
     private final boolean includeSequence;
     private final int maxSearchSize;
-
 
     public MotifSearchIterator(final byte[] seq, final String iupacRegex,
                                final StrandSerializable strand, final String contig,
@@ -69,7 +67,6 @@ public class MotifSearchIterator implements Iterator<Motif> {
         this.offset = start;
         this.includeSequence = includeSequence;
         this.maxSearchSize = maxSearchSize;
-
 
         final Pattern pattern =
                 Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE);
@@ -86,22 +83,20 @@ public class MotifSearchIterator implements Iterator<Motif> {
     }
 
     private Deque<Match> populatePositiveMatches(final Matcher matcher) {
-        int position = 0;
-        LinkedList<Match> matches = new LinkedList<>();
-        while (matcher.find(position)) {
-            Assert.isTrue(matches.size() < maxSearchSize, MESSAGE_TEXT);
-            matches.add(new Match(matcher.start(), matcher.end() - 1));
-            position = matcher.start() + 1;
-        }
-        return matches;
+        return getMatchesByMather(matcher, -1);
     }
 
     private Deque<Match> populateNegativeMatches(final Matcher matcher, final int seqLength) {
+        return getMatchesByMather(matcher, seqLength);
+    }
+
+    private Deque<Match> getMatchesByMather(final Matcher matcher, final int seqLength) {
         int position = 0;
         LinkedList<Match> matches = new LinkedList<>();
         while (matcher.find(position)) {
             Assert.isTrue(matches.size() < maxSearchSize, MESSAGE_TEXT);
-            matches.add(new Match(seqLength - matcher.end(), seqLength - matcher.start() - 1));
+            matches.add(seqLength == -1 ? new Match(matcher.start(), matcher.end() - 1)
+                    : new Match(seqLength - matcher.end(), seqLength - matcher.start() - 1));
             position = matcher.start() + 1;
         }
         return matches;
