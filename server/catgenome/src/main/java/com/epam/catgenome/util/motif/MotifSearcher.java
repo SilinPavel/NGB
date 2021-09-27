@@ -39,28 +39,29 @@ public final class MotifSearcher {
     }
 
     public static Stream<Motif> search(final byte[] seq, final String regex,
-                                       final String contig, final int start, final boolean includeSequence) {
-        return search(seq, regex, null, contig, start, includeSequence);
+                                       final String contig, final int start,
+                                       final boolean includeSequence, final int searchResultSizeLimit) {
+        return search(seq, regex, null, contig, start, includeSequence, searchResultSizeLimit);
     }
 
     public static Stream<Motif> search(final byte[] seq, final String regex,
-                                     final StrandSerializable strand, final String contig,
-                                     final int start, final boolean includeSequence) {
+                                       final StrandSerializable strand, final String contig, final int start,
+                                       final boolean includeSequence, final int searchResultSizeLimit) {
         return StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(
-                        getIterator(seq, regex, strand, contig, start, includeSequence),
+                        getIterator(seq, regex, strand, contig, start, includeSequence, searchResultSizeLimit),
                         Spliterator.ORDERED), false);
     }
 
-    public static Iterator<Motif> getIterator(final byte[] seq, final String regex,
-                                              final StrandSerializable strand, final String contig,
-                                              final int start, final boolean includeSequence) {
+    public static Iterator<Motif> getIterator(final byte[] seq, final String regex, final StrandSerializable strand,
+                                              final String contig, final int start,
+                                              final boolean includeSequence, final int searchResultSizeLimit) {
         if (IupacRegexConverter.validatePlainMotif(regex)) {
             return new SimpleMotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
         } else if (strand == null && IupacRegexConverter.validateReversibleRegex(regex)) {
             return new ReversingRegexMotifSearchIterator(seq, regex, contig, start, includeSequence);
         } else {
-            return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence);
+            return new MotifSearchIterator(seq, regex, strand, contig, start, includeSequence, searchResultSizeLimit);
         }
     }
 }

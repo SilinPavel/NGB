@@ -47,7 +47,6 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private static final byte LOWERCASE_T = 't';
     private static final byte LOWERCASE_N = 'n';
 
-    private static int maxSizeResultLimit = Integer.MAX_VALUE;
 
     private final Deque<Match> positiveMatches;
     private final Deque<Match> negativeMatches;
@@ -55,11 +54,12 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private final byte[] sequence;
     private final int offset;
     private final boolean includeSequence;
+    private final int maxSizeResultLimit;
 
 
     public MotifSearchIterator(final byte[] seq, final String iupacRegex,
                                final StrandSerializable strand, final String contig,
-                               final int start, final boolean includeSequence) {
+                               final int start, final boolean includeSequence, final int searchResultSizeLimit) {
         if (strand != null && strand != StrandSerializable.POSITIVE && strand != StrandSerializable.NEGATIVE) {
             throw new IllegalStateException("Not supported strand: " + strand);
         }
@@ -67,6 +67,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
         this.sequence = seq;
         this.offset = start;
         this.includeSequence = includeSequence;
+        maxSizeResultLimit = searchResultSizeLimit;
 
         final Pattern pattern =
                 Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE);
