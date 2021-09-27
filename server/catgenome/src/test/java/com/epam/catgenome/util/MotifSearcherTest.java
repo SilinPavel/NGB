@@ -45,12 +45,16 @@ public class MotifSearcherTest {
     public static final String SIMPLE_REVERSIBLE_TEST_REGEX = "(c[a])";
     public static final String TEST_REGEX = "ca+?";
     public static final String TEST_REFERENCE_SOURCE = "/templates/dm606.X.fa";
+    public static final int MAX_SEARCH_SIZE = 1_000_000;
 
     @Test
     public void searchTest() {
-        Assert.assertEquals(3, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF, "", 0, true).count());
-        Assert.assertEquals(3, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX, "", 0, true).count());
-        Assert.assertEquals(3, MotifSearcher.search(TEST_SEQUENCE, TEST_REGEX, "", 0, true).count());
+        Assert.assertEquals(3, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF, "", 0,
+                MAX_SEARCH_SIZE, true).count());
+        Assert.assertEquals(3, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX, "", 0,
+                MAX_SEARCH_SIZE, true).count());
+        Assert.assertEquals(3, MotifSearcher.search(TEST_SEQUENCE, TEST_REGEX, "", 0,
+                MAX_SEARCH_SIZE, true).count());
     }
 
     @Test
@@ -59,16 +63,20 @@ public class MotifSearcherTest {
         final String simpleReversiblePalindromeRegex = "(g[c])";
         final String palindromeRegex = "gc+?";
         Assert.assertEquals(8,
-                MotifSearcher.search(TEST_SEQUENCE, simplePalindromeMotif, "", 0, true).count());
+                MotifSearcher.search(TEST_SEQUENCE, simplePalindromeMotif, "", 0, MAX_SEARCH_SIZE, true)
+                        .count());
         Assert.assertEquals(8,
-                MotifSearcher.search(TEST_SEQUENCE, simpleReversiblePalindromeRegex, "", 0, true).count());
+                MotifSearcher.search(TEST_SEQUENCE, simpleReversiblePalindromeRegex, "", 0, MAX_SEARCH_SIZE, true)
+                        .count());
         Assert.assertEquals(8,
-                MotifSearcher.search(TEST_SEQUENCE, palindromeRegex, "", 0, true).count());
+                MotifSearcher.search(TEST_SEQUENCE, palindromeRegex, "", 0, MAX_SEARCH_SIZE, true)
+                        .count());
     }
 
     @Test
     public void searchStartAndEndEdgesWhenGivenSimpleTestMotif() {
-        final int[] actualResults = MotifSearcher.search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF, "", 0, true)
+        final int[] actualResults = MotifSearcher
+                .search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF, "", 0, MAX_SEARCH_SIZE, true)
                 .flatMapToInt(motif -> IntStream.of(motif.getStart(), motif.getEnd()))
                 .toArray();
         final int[] expectedResults = {4, 5, 7, 8, 11, 12};
@@ -77,7 +85,8 @@ public class MotifSearcherTest {
 
     @Test
     public void searchStartAndEndEdgesWhenGivenSimpleReversibleTestRegex() {
-        final int[] actualResults = MotifSearcher.search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX, "", 0, true)
+        final int[] actualResults = MotifSearcher
+                .search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX, "", 0, MAX_SEARCH_SIZE, true)
                 .flatMapToInt(motif -> IntStream.of(motif.getStart(), motif.getEnd()))
                 .toArray();
         final int[] expectedResults = {4, 5, 7, 8, 11, 12};
@@ -87,7 +96,8 @@ public class MotifSearcherTest {
     @Test
     public void searchStartAndEndEdgesWhenGivenTestRegex() {
         final String testRegex = "ca+?";
-        final int[] actualResults = MotifSearcher.search(TEST_SEQUENCE, testRegex, "", 0, true)
+        final int[] actualResults = MotifSearcher
+                .search(TEST_SEQUENCE, testRegex, "", 0, MAX_SEARCH_SIZE, true)
                 .flatMapToInt(motif -> IntStream.of(motif.getStart(), motif.getEnd()))
                 .toArray();
         final int[] expectedResults = {4, 5, 7, 8, 11, 12};
@@ -96,7 +106,8 @@ public class MotifSearcherTest {
 
     @Test
     public void comparingSearchedSequenceWhenGivenSimpleTestMotif() {
-        final String[] actualResults = MotifSearcher.search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF, "", 0, true)
+        final String[] actualResults = MotifSearcher
+                .search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF, "", 0, MAX_SEARCH_SIZE, true)
                 .map(Motif::getSequence)
                 .toArray(String[]::new);
         final String[] expectedResults = {"ca", "tg", "ca"};
@@ -106,7 +117,8 @@ public class MotifSearcherTest {
 
     @Test
     public void comparingSearchedSequenceWhenGivenSimpleReversibleTestRegex() {
-        final String[] actualResults = MotifSearcher.search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX, "", 0, true)
+        final String[] actualResults = MotifSearcher
+                .search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX, "", 0, MAX_SEARCH_SIZE, true)
                 .map(Motif::getSequence)
                 .toArray(String[]::new);
         final String[] expectedResults = {"ca", "tg", "ca"};
@@ -115,7 +127,8 @@ public class MotifSearcherTest {
 
     @Test
     public void comparingSearchedSequenceWhenGivenTestRegex() {
-        final String[] actualResults = MotifSearcher.search(TEST_SEQUENCE, TEST_REGEX, "", 0, true)
+        final String[] actualResults = MotifSearcher
+                .search(TEST_SEQUENCE, TEST_REGEX, "", 0, MAX_SEARCH_SIZE, true)
                 .map(Motif::getSequence)
                 .toArray(String[]::new);
         final String[] expectedResults = {"ca", "tg", "ca"};
@@ -125,44 +138,44 @@ public class MotifSearcherTest {
     @Test
     public void searchInPositiveStrandWhenGivenSimpleTestMotif() {
         Assert.assertEquals(2, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF,
-                StrandSerializable.POSITIVE, "", 0, true).count());
+                StrandSerializable.POSITIVE, "", 0, MAX_SEARCH_SIZE, true).count());
     }
 
     @Test
     public void searchInPositiveStrandWhenGivenSimpleReversibleTestRegex() {
         Assert.assertEquals(2, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX,
-                StrandSerializable.POSITIVE, "", 0, true).count());
+                StrandSerializable.POSITIVE, "", 0, MAX_SEARCH_SIZE, true).count());
     }
 
     @Test
     public void searchInPositiveStrandWhenGivenTestRegex() {
         Assert.assertEquals(2, MotifSearcher.search(TEST_SEQUENCE, TEST_REGEX,
-                StrandSerializable.POSITIVE, "", 0, true).count());
+                StrandSerializable.POSITIVE, "", 0, MAX_SEARCH_SIZE, true).count());
     }
 
     @Test
     public void searchInNegativeStrandWhenGivenSimpleTestMotif() {
         Assert.assertEquals(1, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_TEST_MOTIF,
-                StrandSerializable.NEGATIVE, "", 0, true).count());
+                StrandSerializable.NEGATIVE, "", 0, MAX_SEARCH_SIZE, true).count());
     }
 
     @Test
     public void searchInNegativeStrandWhenGivenSimpleReversibleTestRegex() {
         Assert.assertEquals(1, MotifSearcher.search(TEST_SEQUENCE, SIMPLE_REVERSIBLE_TEST_REGEX,
-                StrandSerializable.NEGATIVE, "", 0, true).count());
+                StrandSerializable.NEGATIVE, "", 0, MAX_SEARCH_SIZE, true).count());
     }
 
     @Test
     public void searchInNegativeStrandWhenGivenTestRegex() {
         Assert.assertEquals(1, MotifSearcher.search(TEST_SEQUENCE, TEST_REGEX,
-                StrandSerializable.NEGATIVE, "", 0, true).count());
+                StrandSerializable.NEGATIVE, "", 0, MAX_SEARCH_SIZE, true).count());
     }
 
     @Test(expected = IllegalStateException.class)
     public void searchThrowsExceptionOnInvalidSequenceWhenGivenTestRegex() {
         byte[] testSequence = "zxcontig".getBytes(StandardCharsets.UTF_8);
         String testRegex = "con+?";
-        MotifSearcher.search(testSequence, testRegex, "", 0, true);
+        MotifSearcher.search(testSequence, testRegex, "", 0, MAX_SEARCH_SIZE, true);
     }
 
     @Test
@@ -199,7 +212,7 @@ public class MotifSearcherTest {
             {"taccat", "taccaa", "taccgt", "taccga", "tactat", "tactaa", "tactgt", "tactga"};
         final int actualSize = IntStream.range(0,  testMotifsAsRegexSubstitution.length)
                 .map(i -> MotifSearcher
-                        .search(largeTestSequence, testMotifsAsRegexSubstitution[i], "", 0, true)
+                        .search(largeTestSequence, testMotifsAsRegexSubstitution[i], "", 0, MAX_SEARCH_SIZE, true)
                         .collect(Collectors.toList()).size())
                 .sum();
         Assert.assertEquals(expectedSize, actualSize);
@@ -211,7 +224,8 @@ public class MotifSearcherTest {
         final byte[] largeTestSequence = getTestSequenceFromResource(TEST_REFERENCE_SOURCE);
         final String simpleReversibleTestRegex = "(tacyrw)";
         Assert.assertEquals(expectedSize,
-                MotifSearcher.search(largeTestSequence, simpleReversibleTestRegex, "", 0, true).count());
+                MotifSearcher.search(largeTestSequence, simpleReversibleTestRegex, "", 0, MAX_SEARCH_SIZE, true)
+                        .count());
     }
 
     @Test
@@ -219,7 +233,8 @@ public class MotifSearcherTest {
         final int expectedSize = 57534;
         final byte[] largeTestSequence = getTestSequenceFromResource(TEST_REFERENCE_SOURCE);
         final String testRegex = "tacyrw+?";
-        Assert.assertEquals(expectedSize, MotifSearcher.search(largeTestSequence, testRegex, "", 0, true).count());
+        Assert.assertEquals(expectedSize, MotifSearcher.search(largeTestSequence, testRegex, "", 0,
+                MAX_SEARCH_SIZE, true).count());
     }
 
     @Test
@@ -231,10 +246,10 @@ public class MotifSearcherTest {
         final int actualSize = IntStream.range(0, testMotifsAsRegexSubstitution.length)
                 .map(i ->
                         MotifSearcher.search(largeTestSequence, testMotifsAsRegexSubstitution[i],
-                                StrandSerializable.POSITIVE, "", 0, true)
+                                        StrandSerializable.POSITIVE, "", 0, MAX_SEARCH_SIZE, true)
                                 .collect(Collectors.toList()).size()
                                 + MotifSearcher.search(largeTestSequence, testMotifsAsRegexSubstitution[i],
-                                StrandSerializable.NEGATIVE, "", 0, true)
+                                        StrandSerializable.NEGATIVE, "", 0, MAX_SEARCH_SIZE, true)
                                 .collect(Collectors.toList()).size()
                 )
                 .sum();
@@ -247,8 +262,10 @@ public class MotifSearcherTest {
         final byte[] largeTestSequence = getTestSequenceFromResource(TEST_REFERENCE_SOURCE);
         String testRegex = "tacyrw+?";
         final long sumResult =
-                MotifSearcher.search(largeTestSequence, testRegex, StrandSerializable.POSITIVE, "", 0, true).count() +
-                MotifSearcher.search(largeTestSequence, testRegex, StrandSerializable.NEGATIVE, "", 0, true).count();
+                MotifSearcher.search(largeTestSequence, testRegex, StrandSerializable.POSITIVE, "", 0,
+                        MAX_SEARCH_SIZE, true).count() +
+                        MotifSearcher.search(largeTestSequence, testRegex, StrandSerializable.NEGATIVE, "", 0,
+                                MAX_SEARCH_SIZE, true).count();
         Assert.assertEquals(expectedSize, sumResult);
     }
 

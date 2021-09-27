@@ -66,6 +66,9 @@ public class MotifSearchManager {
     @Value("${motif.search.include.sequence:false}")
     private boolean defaultIncludeSequence;
 
+    @Value("${motif.search.max.search.size:1000000}")
+    private int maxSearchSize;
+
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
 
@@ -151,7 +154,7 @@ public class MotifSearchManager {
         final List<Motif> searchResult =
                 MotifSearcher.search(getSequence(startPosition, endPosition, reference, chromosome),
                         request.getMotif(), request.getStrand(),
-                        chromosome.getName(), startPosition, includeSequence)
+                        chromosome.getName(), startPosition, maxSearchSize, includeSequence)
                         .filter(motif -> motif.getEnd() >= request.getStartPosition()
                                 && motif.getStart() <= request.getEndPosition())
                         .limit(pageSize)

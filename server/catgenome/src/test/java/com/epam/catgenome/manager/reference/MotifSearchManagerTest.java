@@ -324,7 +324,7 @@ public class MotifSearchManagerTest {
 
         final MotifSearchResult search = motifSearchManager.search(testRequest);
         Assert.assertEquals(0, search.getResult().size());
-        Assert.assertEquals(0, search.getPageSize().longValue());
+        Assert.assertEquals(PAGE_SIZE, search.getPageSize().longValue());
         Assert.assertEquals(testStart + 1, search.getPosition().longValue());
     }
 
@@ -391,6 +391,8 @@ public class MotifSearchManagerTest {
         final int testBufferSizeStep = 123;
         final int numberOfBufferSteps = 5;
         final String testMotif = "acrywagt";
+        final int newDefaultPageSize = 200;
+        final int oldDefaultPageSize = 100;
 
 
         final MotifSearchRequest testRequest = MotifSearchRequest.builder()
@@ -405,14 +407,15 @@ public class MotifSearchManagerTest {
                 .slidingWindow(slidingWindow)
                 .build();
 
+        ReflectionTestUtils.setField(motifSearchManager, "defaultPageSize", newDefaultPageSize);
         final MotifSearchResult searchWithNormalBuffer = motifSearchManager.search(testRequest);
         Assert.assertEquals(expectedResultSize, searchWithNormalBuffer.getResult().size());
-
         IntStream.iterate(START_POSITION, i -> i + testBufferSizeStep).limit(numberOfBufferSteps).forEach(i -> {
             ReflectionTestUtils.setField(motifSearchManager, "bufferSize", i);
             final MotifSearchResult searchWithSmallBuffer = motifSearchManager.search(testRequest);
             Assert.assertEquals(searchWithNormalBuffer.getResult().size(), searchWithSmallBuffer.getResult().size());
         });
+        ReflectionTestUtils.setField(motifSearchManager, "defaultPageSize", oldDefaultPageSize);
     }
 
     @Test

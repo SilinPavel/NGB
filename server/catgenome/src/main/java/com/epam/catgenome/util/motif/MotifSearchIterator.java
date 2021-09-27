@@ -46,7 +46,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private static final byte LOWERCASE_G = 'g';
     private static final byte LOWERCASE_T = 't';
     private static final byte LOWERCASE_N = 'n';
-    private static final int MAX_SEARCH_VALUE = 1_000_000;
+
     private static final String MESSAGE_TEXT = "Too many results, specify a more specific query";
 
     private final Deque<Match> positiveMatches;
@@ -55,11 +55,12 @@ public class MotifSearchIterator implements Iterator<Motif> {
     private final byte[] sequence;
     private final int offset;
     private final boolean includeSequence;
+    private final int maxSearchSize;
 
 
     public MotifSearchIterator(final byte[] seq, final String iupacRegex,
                                final StrandSerializable strand, final String contig,
-                               final int start, final boolean includeSequence) {
+                               final int start, final int maxSearchSize, final boolean includeSequence) {
         if (strand != null && strand != StrandSerializable.POSITIVE && strand != StrandSerializable.NEGATIVE) {
             throw new IllegalStateException("Not supported strand: " + strand);
         }
@@ -67,6 +68,8 @@ public class MotifSearchIterator implements Iterator<Motif> {
         this.sequence = seq;
         this.offset = start;
         this.includeSequence = includeSequence;
+        this.maxSearchSize = maxSearchSize;
+
 
         final Pattern pattern =
                 Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE);
@@ -84,10 +87,9 @@ public class MotifSearchIterator implements Iterator<Motif> {
 
     private Deque<Match> populatePositiveMatches(final Matcher matcher) {
         int position = 0;
-        int resultsCount = 0;
         LinkedList<Match> matches = new LinkedList<>();
         while (matcher.find(position)) {
-            Assert.isTrue(++resultsCount < MAX_SEARCH_VALUE, MESSAGE_TEXT);
+            Assert.isTrue(matches.size() < maxSearchSize, MESSAGE_TEXT);
             matches.add(new Match(matcher.start(), matcher.end() - 1));
             position = matcher.start() + 1;
         }
@@ -96,10 +98,9 @@ public class MotifSearchIterator implements Iterator<Motif> {
 
     private Deque<Match> populateNegativeMatches(final Matcher matcher, final int seqLength) {
         int position = 0;
-        int resultsCount = 0;
         LinkedList<Match> matches = new LinkedList<>();
         while (matcher.find(position)) {
-            Assert.isTrue(++resultsCount < MAX_SEARCH_VALUE, MESSAGE_TEXT);
+            Assert.isTrue(matches.size() < maxSearchSize, MESSAGE_TEXT);
             matches.add(new Match(seqLength - matcher.end(), seqLength - matcher.start() - 1));
             position = matcher.start() + 1;
         }
