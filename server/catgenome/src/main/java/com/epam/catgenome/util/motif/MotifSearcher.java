@@ -39,7 +39,8 @@ public final class MotifSearcher {
     }
 
     public static Stream<Motif> search(final byte[] seq, final String regex,
-                                     final String contig, final int start, final int maxSearchSize, final boolean includeSequence) {
+                                       final String contig, final int start,
+                                       final int maxSearchSize, final boolean includeSequence) {
         return search(seq, regex, null, contig, start, maxSearchSize, includeSequence);
     }
 

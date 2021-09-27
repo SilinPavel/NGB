@@ -394,7 +394,6 @@ public class MotifSearchManagerTest {
         final int newDefaultPageSize = 200;
         final int oldDefaultPageSize = 100;
 
-
         final MotifSearchRequest testRequest = MotifSearchRequest.builder()
                 .referenceId(testReference.getId())
                 .chromosomeId(testChromosome.getId())
