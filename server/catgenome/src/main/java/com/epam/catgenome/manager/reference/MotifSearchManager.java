@@ -66,6 +66,9 @@ public class MotifSearchManager {
     @Value("${motif.search.include.sequence:false}")
     private boolean defaultIncludeSequence;
 
+    @Value("${motif.search.result.size.limit:2000000}")
+    private int searchResultSizeLimit;
+
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
 
@@ -142,7 +145,9 @@ public class MotifSearchManager {
         final boolean includeSequence = request.getIncludeSequence() == null
                         ? defaultIncludeSequence
                         : request.getIncludeSequence();
-
+        final int pageSize = request.getPageSize() == null
+                ? Integer.MAX_VALUE
+                : request.getPageSize();
         int overlap = validateAndAdjustOverlap(request);
         int startPosition = Math.max(1, request.getStartPosition() - overlap);
         int endPosition = Math.min(chromosome.getSize(), request.getEndPosition() + overlap);
@@ -150,9 +155,10 @@ public class MotifSearchManager {
         final List<Motif> searchResult =
                 MotifSearcher.search(getSequence(startPosition, endPosition, reference, chromosome),
                         request.getMotif(), request.getStrand(),
-                        chromosome.getName(), startPosition, includeSequence).stream()
+                        chromosome.getName(), startPosition, includeSequence, searchResultSizeLimit)
                         .filter(motif -> motif.getEnd() >= request.getStartPosition()
                                 && motif.getStart() <= request.getEndPosition())
+                        .limit(pageSize)
                         .collect(Collectors.toList());
 
         final int lastStart = searchResult.isEmpty()
@@ -161,7 +167,7 @@ public class MotifSearchManager {
         return MotifSearchResult.builder()
                 .result(searchResult)
                 .chromosomeId(request.getChromosomeId())
-                .pageSize(searchResult.size())
+                .pageSize(request.getPageSize())
                 .position(lastStart < chromosome.getSize() ? lastStart + 1 : null)
                 .build();
     }
@@ -211,6 +217,7 @@ public class MotifSearchManager {
                             .chromosomeId(request.getChromosomeId())
                             .startPosition(currentStart)
                             .endPosition(currentEnd)
+                            .pageSize(pageSize)
                             .includeSequence(request.getIncludeSequence())
                             .strand(request.getStrand())
                             .slidingWindow(request.getSlidingWindow())
@@ -231,7 +238,7 @@ public class MotifSearchManager {
         return MotifSearchResult.builder()
                 .result(pageSizedResult)
                 .chromosomeId(request.getChromosomeId())
-                .pageSize(pageSizedResult.size())
+                .pageSize(pageSize)
                 .position(lastStartMotifPosition == null || lastStartMotifPosition.equals(chromosome.getSize())
                         ? null
                         : lastStartMotifPosition + 1)
