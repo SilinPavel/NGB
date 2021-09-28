@@ -278,14 +278,14 @@ public class MotifSearcherTest {
         Assert.assertEquals(expectedSize, sumResult);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void searchInLargeBufferOnPositiveStrandWhenGivenShortestTestRegexAndSetModestResultSizeLimitShouldFail()
             throws IOException {
         new MotifSearchIterator(getTestSequenceFromResource(TEST_REFERENCE_SOURCE), EXTENDED_TEST_REGEX,
                 StrandSerializable.NEGATIVE, "", 0, true, SIZE_SEARCH_RESULT_LOW_LIMIT);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void searchInLargeBufferOnNegativeStrandWhenGivenShortestTestRegexAndSetModestResultSizeLimitShouldFail()
             throws IOException {
         new MotifSearchIterator(getTestSequenceFromResource(TEST_REFERENCE_SOURCE), EXTENDED_TEST_REGEX,
