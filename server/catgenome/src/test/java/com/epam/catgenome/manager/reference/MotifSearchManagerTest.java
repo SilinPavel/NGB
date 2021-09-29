@@ -46,7 +46,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
@@ -60,7 +59,7 @@ public class MotifSearchManagerTest {
     public static final int START_POSITION = 50;
     public static final int END_POSITION = 1000;
     public static final int PAGE_SIZE = 100;
-    public static final int BIG_PAGE_SIZE = 10000;
+    public static final int LARGE_PAGE_SIZE = 10000;
 
     @Autowired
     ApplicationContext context;
@@ -71,12 +70,12 @@ public class MotifSearchManagerTest {
     @Autowired
     private MotifSearchManager motifSearchManager;
 
-    private static final String TEST_REF_NAME = "//dm606.X.fa";
+    private static final String LARGE_TEST_REFERENCE = "/dm606.X.fa";
     private static final String CHROMOSOME_NAME = "X";
 
-    private static final String A3_FA_NAME = "//A3.fa";
-    private static final String HP_GENOME_NAME = "//reference/hp.genome.fa";
-    private static final String TEST_WG_NAME = "//Test_wg.fa";
+    private static final String MIDDLE_TEST_REFERENCE = "/A3.fa";
+    private static final String SHORT_TEST_REFERENCE = "/reference/hp.genome.fa";
+    private static final String SHORT_CYCLIC_TEST_REFERENCE = "/Test_wg.fa";
     private static final String TEST_GENOME_MOTIF = "AAC";
     private static final String EXTENDED_TEST_GENOME_MOTIF = "A+C";
 
@@ -92,10 +91,9 @@ public class MotifSearchManagerTest {
     public void setup() throws IOException {
         motifSearchManagerBufferSize = (int)ReflectionTestUtils.getField(motifSearchManager, "bufferSize");
         Resource resource = context.getResource("classpath:templates");
-        File fastaFile = new File(resource.getFile().getAbsolutePath() + TEST_REF_NAME);
 
         ReferenceRegistrationRequest request = new ReferenceRegistrationRequest();
-        request.setPath(fastaFile.getPath());
+        request.setPath(resource.getFile().getAbsolutePath() + LARGE_TEST_REFERENCE);
         testReference = referenceManager.registerGenome(request);
         List<Chromosome> chromosomeList = testReference.getChromosomes();
         for (Chromosome chromosome : chromosomeList) {
@@ -105,17 +103,14 @@ public class MotifSearchManagerTest {
             }
         }
 
-        fastaFile = new File(resource.getFile().getAbsolutePath() + A3_FA_NAME);
         request = new ReferenceRegistrationRequest();
-        request.setPath(fastaFile.getPath());
+        request.setPath(resource.getFile().getAbsolutePath() + MIDDLE_TEST_REFERENCE);
         a3TestReference = referenceManager.registerGenome(request);
-        fastaFile = new File(resource.getFile().getAbsolutePath() + HP_GENOME_NAME);
         request = new ReferenceRegistrationRequest();
-        request.setPath(fastaFile.getPath());
+        request.setPath(resource.getFile().getAbsolutePath() + SHORT_TEST_REFERENCE);
         hpGenomeTestReference = referenceManager.registerGenome(request);
-        fastaFile = new File(resource.getFile().getAbsolutePath() + TEST_WG_NAME);
         request = new ReferenceRegistrationRequest();
-        request.setPath(fastaFile.getPath());
+        request.setPath(resource.getFile().getAbsolutePath() + SHORT_CYCLIC_TEST_REFERENCE);
         testWgTestReference = referenceManager.registerGenome(request);
     }
 
@@ -189,7 +184,7 @@ public class MotifSearchManagerTest {
                 .motif(testMotif)
                 .build();
         final MotifSearchResult unsuccessfulSearch = motifSearchManager.search(testUnsuccessfulRequest);
-        Assert.assertEquals(0, unsuccessfulSearch.getResult().size());
+        Assert.assertTrue(unsuccessfulSearch.getResult().isEmpty());
     }
 
     @Test
@@ -230,7 +225,7 @@ public class MotifSearchManagerTest {
                 .motif(testMotif)
                 .build();
         final MotifSearchResult unsuccessfulSearch = motifSearchManager.search(testUnsuccessfulRequest);
-        Assert.assertEquals(0, unsuccessfulSearch.getResult().size());
+        Assert.assertTrue(unsuccessfulSearch.getResult().isEmpty());
     }
 
     @Test
@@ -508,7 +503,7 @@ public class MotifSearchManagerTest {
                 .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(BIG_PAGE_SIZE)
+                .pageSize(LARGE_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(request);
@@ -530,7 +525,7 @@ public class MotifSearchManagerTest {
                 .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(BIG_PAGE_SIZE)
+                .pageSize(LARGE_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(request);
@@ -552,7 +547,7 @@ public class MotifSearchManagerTest {
                 .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(BIG_PAGE_SIZE)
+                .pageSize(LARGE_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(request);
@@ -623,7 +618,7 @@ public class MotifSearchManagerTest {
                 .startPosition(1)
                 .motif(EXTENDED_TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
-                .pageSize(BIG_PAGE_SIZE)
+                .pageSize(LARGE_PAGE_SIZE)
                 .strand(StrandSerializable.POSITIVE)
                 .build();
         MotifSearchResult search = motifSearchManager.search(att);
@@ -663,7 +658,7 @@ public class MotifSearchManagerTest {
         motifSearchManager.search(att);
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = IllegalArgumentException.class)
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void shouldFailWhenWeSearchShortestRegexMotif() {
         MotifSearchRequest att = MotifSearchRequest.builder()

@@ -158,7 +158,8 @@ public class SimpleMotifSearchIterator implements Iterator<Motif> {
                     result.setCharAt(i, 'c');
                     break;
                 default:
-                    throw new IllegalArgumentException("Letter \"" + result.charAt(i) + "\" not matches [acgt] regex!");
+                    throw new IllegalArgumentException("Letter \"" + result.charAt(i)
+                            + "\" does not match [acgt] regex!");
             }
         }
         return result.toString();

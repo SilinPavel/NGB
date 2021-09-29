@@ -40,11 +40,6 @@ public final class IupacRegexConverter {
         return motif.matches(PLAIN_MOTIF);
     }
 
-    public static String combineIupacRegex(final String iupacRegex, final String posAlias, final String negAlias) {
-        return "(?<" + posAlias + ">" + convertIupacToRegex(iupacRegex) + ")|(?<"
-                + negAlias + ">"+ convertIupacToComplementReversedRegex(iupacRegex) + ")";
-    }
-
     /**
      * Converts specified IUPAC regex to the plain nucleotide regex
      *

@@ -32,24 +32,24 @@ import java.util.regex.Pattern;
 public final class RegexReverser {
 
     private static final String REGEX_QUANTIFIER_PATTERN = "([\\+\\*]\\?)|[\\+\\*\\?]|(\\{,?\\d+,?\\d*\\})";
-    private static final char INVERTING_REGEXP_CHARACTER = '^';
+    private static final char INVERTING_REGEX_CHARACTER = '^';
 
     private RegexReverser() {
     }
 
     public static void reverseRegex(final StringBuilder regex) {
-        moveInvertingRegexpCharacter(regex);
-        moveQuantifierRegexpCharacter(regex);
+        moveInvertingRegexCharacter(regex);
+        moveQuantifierRegexCharacter(regex);
         exchangeAllBrackets(regex);
         regex.reverse();
     }
 
-    private static void moveInvertingRegexpCharacter(final StringBuilder regex) {
+    private static void moveInvertingRegexCharacter(final StringBuilder regex) {
         int i = 0;
         while (i < regex.length()) {
-            if (regex.charAt(i) == INVERTING_REGEXP_CHARACTER) {
+            if (regex.charAt(i) == INVERTING_REGEX_CHARACTER) {
                 int newPosition = findPositionBeforeClosingBracket(regex, i);
-                regex.insert(newPosition, INVERTING_REGEXP_CHARACTER);
+                regex.insert(newPosition, INVERTING_REGEX_CHARACTER);
                 regex.deleteCharAt(i);
                 i = newPosition;
             }
@@ -69,10 +69,10 @@ public final class RegexReverser {
                 return i;
             }
         }
-        throw new IllegalArgumentException("\"^\" regexp character ocured in a wrong place!");
+        throw new IllegalArgumentException("\"^\" regex character occurred in a wrong place!");
     }
 
-    private static void moveQuantifierRegexpCharacter(final StringBuilder regex) {
+    private static void moveQuantifierRegexCharacter(final StringBuilder regex) {
         final Matcher matcher = Pattern.compile(REGEX_QUANTIFIER_PATTERN).matcher(regex);
 
         while (matcher.find()) {
@@ -96,7 +96,7 @@ public final class RegexReverser {
                 return i;
             }
         }
-        throw new IllegalArgumentException("\"^\" regexp character ocured in a wrong place!");
+        throw new IllegalArgumentException("\"^\" regex character occurred in a wrong place!");
     }
 
     private static void exchangeAllBrackets(final StringBuilder regex) {

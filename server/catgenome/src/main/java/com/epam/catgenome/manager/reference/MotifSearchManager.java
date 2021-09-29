@@ -202,7 +202,7 @@ public class MotifSearchManager {
         final int pageSize = request.getPageSize() == null || request.getPageSize() <= 0
                 ? defaultPageSize
                 : request.getPageSize();
-        final int start = request.getStartPosition() == null ? 0 : request.getStartPosition();
+        final int start = request.getStartPosition() == null ? 1 : request.getStartPosition();
         final int end = request.getEndPosition() == null ? chromosome.getSize() : request.getEndPosition();
 
         final Set<Motif> result = new LinkedHashSet<>();
