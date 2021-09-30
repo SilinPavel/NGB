@@ -90,7 +90,7 @@ public class MotifSearchManagerTest {
 
     @Before
     public void setup() throws IOException {
-        motifSearchManagerBufferSize = (int)ReflectionTestUtils.getField(motifSearchManager, "bufferSize");
+        motifSearchManagerBufferSize = (int) ReflectionTestUtils.getField(motifSearchManager, "bufferSize");
         Resource resource = context.getResource("classpath:templates");
         File fastaFile = new File(resource.getFile().getAbsolutePath() + TEST_REF_NAME);
 

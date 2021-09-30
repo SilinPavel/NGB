@@ -112,30 +112,31 @@ public class MotifSearchManager {
             case REGION:
                 return searchRegionMotifs(request, reference);
             default:
-                throw new IllegalStateException("Unexpected search type: " + request.getSearchType());
+                throw new IllegalStateException(getMessage(
+                        MessagesConstants.ERROR_UNEXPECTED_SEARCH_TYPE, request.getSearchType()));
         }
     }
 
     private void verifyMotifSearchRequest(final MotifSearchRequest request) {
-        Assert.notNull(request.getSearchType(), getMessage("Search type is empty!"));
-        Assert.notNull(request.getMotif(), getMessage("Motif is empty!"));
-        Assert.notNull(request.getReferenceId(), getMessage("Genome id is empty!"));
+        Assert.notNull(request.getSearchType(), getMessage(MessagesConstants.ERROR_EMPTY_SEARCH_TYPE));
+        Assert.notNull(request.getMotif(), getMessage(MessagesConstants.ERROR_EMPTY_MOTIF));
+        Assert.notNull(request.getReferenceId(), getMessage(MessagesConstants.ERROR_EMPTY_GENOME_ID));
         final Integer start = request.getStartPosition();
         final Integer end = request.getEndPosition();
         final MotifSearchType searchType = request.getSearchType();
         if (searchType.equals(MotifSearchType.WHOLE_GENOME)) {
             return;
         }
-        Assert.notNull(request.getChromosomeId(), getMessage("Chromosome not provided!"));
+        Assert.notNull(request.getChromosomeId(), getMessage(MessagesConstants.ERROR_EMPTY_CHROMOSOME_ID));
         if (end != null && start != null) {
             Assert.isTrue(end - start > 0,
-                    getMessage("Provided end and start are not valid: " + end + " < " + start));
+                    getMessage(MessagesConstants.ERROR_INVALID_START_END, end, start));
         }
         if (searchType.equals(MotifSearchType.CHROMOSOME)) {
             return;
         }
-        Assert.notNull(start, getMessage("Start position is empty!"));
-        Assert.notNull(end, getMessage("End position is empty!"));
+        Assert.notNull(start, getMessage(MessagesConstants.ERROR_EMPTY_START));
+        Assert.notNull(end, getMessage(MessagesConstants.ERROR_EMPTY_END));
     }
 
     private MotifSearchResult searchRegionMotifs(final MotifSearchRequest request, final Reference reference) {
@@ -187,8 +188,8 @@ public class MotifSearchManager {
                                final Chromosome chromosome) {
         final byte[] sequence;
         try {
-            sequence= referenceManager.getSequenceByteArray(startPosition,
-                            endPosition, reference, chromosome.getName());
+            sequence = referenceManager.getSequenceByteArray(startPosition, endPosition,
+                    reference, chromosome.getName());
         } catch (IOException e) {
             throw new IllegalStateException(getMessage(MessagesConstants.ERROR_REFERENCE_SEQUENCE_READING));
         }
