@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -70,18 +71,18 @@ public class MotifSearchManagerTest {
     @Autowired
     private MotifSearchManager motifSearchManager;
 
-    private static final String LARGE_TEST_REFERENCE = "/dm606.X.fa";
+    private static final String LARGE_TEST_REFERENCE = "dm606.X.fa";
     private static final String CHROMOSOME_NAME = "X";
 
-    private static final String MIDDLE_TEST_REFERENCE = "/A3.fa";
-    private static final String SHORT_TEST_REFERENCE = "/reference/hp.genome.fa";
-    private static final String SHORT_CYCLIC_TEST_REFERENCE = "/Test_wg.fa";
+    private static final String MIDDLE_TEST_REFERENCE = "A3.fa";
+    private static final String SHORT_TEST_REFERENCE = "reference/hp.genome.fa";
+    private static final String SHORT_CYCLIC_TEST_REFERENCE = "Test_wg.fa";
     private static final String TEST_GENOME_MOTIF = "AAC";
     private static final String EXTENDED_TEST_GENOME_MOTIF = "A+C";
 
-    private Reference a3TestReference;
-    private Reference hpGenomeTestReference;
-    private Reference testWgTestReference;
+    private Reference middleTestReference;
+    private Reference shortTestReference;
+    private Reference shortCyclicTestReference;
 
     private Reference testReference;
     private Chromosome testChromosome;
@@ -93,7 +94,7 @@ public class MotifSearchManagerTest {
         Resource resource = context.getResource("classpath:templates");
 
         ReferenceRegistrationRequest request = new ReferenceRegistrationRequest();
-        request.setPath(resource.getFile().getAbsolutePath() + LARGE_TEST_REFERENCE);
+        request.setPath(Paths.get(resource.getFile().getAbsolutePath(), LARGE_TEST_REFERENCE).toString());
         testReference = referenceManager.registerGenome(request);
         List<Chromosome> chromosomeList = testReference.getChromosomes();
         for (Chromosome chromosome : chromosomeList) {
@@ -104,14 +105,14 @@ public class MotifSearchManagerTest {
         }
 
         request = new ReferenceRegistrationRequest();
-        request.setPath(resource.getFile().getAbsolutePath() + MIDDLE_TEST_REFERENCE);
-        a3TestReference = referenceManager.registerGenome(request);
+        request.setPath(Paths.get(resource.getFile().getAbsolutePath(), MIDDLE_TEST_REFERENCE).toString());
+        middleTestReference = referenceManager.registerGenome(request);
         request = new ReferenceRegistrationRequest();
-        request.setPath(resource.getFile().getAbsolutePath() + SHORT_TEST_REFERENCE);
-        hpGenomeTestReference = referenceManager.registerGenome(request);
+        request.setPath(Paths.get(resource.getFile().getAbsolutePath(), SHORT_TEST_REFERENCE).toString());
+        shortTestReference = referenceManager.registerGenome(request);
         request = new ReferenceRegistrationRequest();
-        request.setPath(resource.getFile().getAbsolutePath() + SHORT_CYCLIC_TEST_REFERENCE);
-        testWgTestReference = referenceManager.registerGenome(request);
+        request.setPath(Paths.get(resource.getFile().getAbsolutePath(), SHORT_CYCLIC_TEST_REFERENCE).toString());
+        shortCyclicTestReference = referenceManager.registerGenome(request);
     }
 
     @After
@@ -413,10 +414,10 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void searchForSpecifiedPositionsShouldReturnNotEmptyResultsTest() {
         MotifSearchRequest request = MotifSearchRequest.builder()
-                .referenceId(a3TestReference.getId())
+                .referenceId(middleTestReference.getId())
                 .startPosition(START_POSITION)
                 .endPosition(END_POSITION)
-                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .chromosomeId(middleTestReference.getChromosomes().get(0).getId())
                 .motif(TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(Integer.MAX_VALUE)
@@ -430,9 +431,9 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void searchForSpecifiedPageSizeShouldReturnResultsWithSizeEqualPageSizeTest() {
         MotifSearchRequest request = MotifSearchRequest.builder()
-                .referenceId(a3TestReference.getId())
+                .referenceId(middleTestReference.getId())
                 .startPosition(1)
-                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .chromosomeId(middleTestReference.getChromosomes().get(0).getId())
                 .motif(TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(PAGE_SIZE)
@@ -446,8 +447,8 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void searchForLargeNumberOfResultsShouldReturnResultsFromSeveralChromosomesTest() {
         MotifSearchRequest att = MotifSearchRequest.builder()
-                .referenceId(hpGenomeTestReference.getId())
-                .chromosomeId(hpGenomeTestReference.getChromosomes().get(1).getId())
+                .referenceId(shortTestReference.getId())
+                .chromosomeId(shortTestReference.getChromosomes().get(1).getId())
                 .motif(TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(PAGE_SIZE)
@@ -463,8 +464,8 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void checkThatPositionIsNullWhenWeSearchForLargeNumberOfResultsTest() {
         MotifSearchRequest att = MotifSearchRequest.builder()
-                .referenceId(hpGenomeTestReference.getId())
-                .chromosomeId(hpGenomeTestReference.getChromosomes().get(1).getId())
+                .referenceId(shortTestReference.getId())
+                .chromosomeId(shortTestReference.getChromosomes().get(1).getId())
                 .startPosition(1)
                 .motif(TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
@@ -480,9 +481,9 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void checkThatPositionIsNullWhenWeSearchFullGenomeButDataOnlyInFirstChrTest() {
         MotifSearchRequest att = MotifSearchRequest.builder()
-                .referenceId(testWgTestReference.getId())
+                .referenceId(shortCyclicTestReference.getId())
                 .startPosition(1)
-                .chromosomeId(testWgTestReference.getChromosomes().get(0).getId())
+                .chromosomeId(shortCyclicTestReference.getChromosomes().get(0).getId())
                 .motif("CCC")
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(PAGE_SIZE)
@@ -499,8 +500,8 @@ public class MotifSearchManagerTest {
         final String motif = "AA[GGCCA(CAA)AT]";
         final String invertedMotif = "[AT(TTG)TGGCC]TT";
         MotifSearchRequest request = MotifSearchRequest.builder()
-                .referenceId(a3TestReference.getId())
-                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .referenceId(middleTestReference.getId())
+                .chromosomeId(middleTestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(LARGE_PAGE_SIZE)
@@ -521,8 +522,8 @@ public class MotifSearchManagerTest {
         final String motif = "acryagt";
         final String invertedMotif = "actrygt";
         MotifSearchRequest request = MotifSearchRequest.builder()
-                .referenceId(a3TestReference.getId())
-                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .referenceId(middleTestReference.getId())
+                .chromosomeId(middleTestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(LARGE_PAGE_SIZE)
@@ -543,8 +544,8 @@ public class MotifSearchManagerTest {
         final String motif = "acwagt";
         final String invertedMotif = "actwgt";
         MotifSearchRequest request = MotifSearchRequest.builder()
-                .referenceId(a3TestReference.getId())
-                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .referenceId(middleTestReference.getId())
+                .chromosomeId(middleTestReference.getChromosomes().get(0).getId())
                 .motif(motif)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(LARGE_PAGE_SIZE)
@@ -563,10 +564,10 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void searchForSpecifiedPositionsByExtMotifShouldReturnNotEmptyResultsTest() {
         MotifSearchRequest request = MotifSearchRequest.builder()
-                .referenceId(a3TestReference.getId())
+                .referenceId(middleTestReference.getId())
                 .startPosition(START_POSITION)
                 .endPosition(END_POSITION)
-                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .chromosomeId(middleTestReference.getChromosomes().get(0).getId())
                 .motif(EXTENDED_TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(Integer.MAX_VALUE)
@@ -580,9 +581,9 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void searchForSpecifiedPageSizeByExtMotifShouldReturnResultsWithSizeEqualPageSizeTest() {
         MotifSearchRequest request = MotifSearchRequest.builder()
-                .referenceId(a3TestReference.getId())
+                .referenceId(middleTestReference.getId())
                 .startPosition(1)
-                .chromosomeId(a3TestReference.getChromosomes().get(0).getId())
+                .chromosomeId(middleTestReference.getChromosomes().get(0).getId())
                 .motif(EXTENDED_TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(PAGE_SIZE)
@@ -596,8 +597,8 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void searchForLargeNumberOfResultsByExtMotifShouldReturnResultsFromSeveralChromosomesTest() {
         MotifSearchRequest att = MotifSearchRequest.builder()
-                .referenceId(hpGenomeTestReference.getId())
-                .chromosomeId(hpGenomeTestReference.getChromosomes().get(1).getId())
+                .referenceId(shortTestReference.getId())
+                .chromosomeId(shortTestReference.getChromosomes().get(1).getId())
                 .motif(EXTENDED_TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(PAGE_SIZE)
@@ -613,8 +614,8 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void checkThatPositionIsNullWhenWeSearchByExtMotifForLargeNumberOfResultsTest() {
         MotifSearchRequest att = MotifSearchRequest.builder()
-                .referenceId(hpGenomeTestReference.getId())
-                .chromosomeId(hpGenomeTestReference.getChromosomes().get(1).getId())
+                .referenceId(shortTestReference.getId())
+                .chromosomeId(shortTestReference.getChromosomes().get(1).getId())
                 .startPosition(1)
                 .motif(EXTENDED_TEST_GENOME_MOTIF)
                 .searchType(MotifSearchType.WHOLE_GENOME)
@@ -630,9 +631,9 @@ public class MotifSearchManagerTest {
     @Transactional(propagation = Propagation.REQUIRES_NEW, rollbackFor = Exception.class)
     public void checkThatPositionIsNullWhenWeSearchFullGenomeByExtMotifButDataOnlyInFirstChrTest() {
         MotifSearchRequest att = MotifSearchRequest.builder()
-                .referenceId(testWgTestReference.getId())
+                .referenceId(shortCyclicTestReference.getId())
                 .startPosition(1)
-                .chromosomeId(testWgTestReference.getChromosomes().get(0).getId())
+                .chromosomeId(shortCyclicTestReference.getChromosomes().get(0).getId())
                 .motif("CC+")
                 .searchType(MotifSearchType.WHOLE_GENOME)
                 .pageSize(PAGE_SIZE)

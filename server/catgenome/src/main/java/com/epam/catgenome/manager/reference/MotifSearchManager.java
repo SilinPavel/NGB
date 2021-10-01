@@ -69,6 +69,8 @@ public class MotifSearchManager {
     @Value("${motif.search.result.size.limit:2000000}")
     private int searchResultSizeLimit;
 
+    private static final int DEFAULT_START_POSITION = 1;
+
     @Autowired
     private ReferenceGenomeManager referenceGenomeManager;
 
@@ -149,7 +151,7 @@ public class MotifSearchManager {
                 ? Integer.MAX_VALUE
                 : request.getPageSize();
         int overlap = validateAndAdjustOverlap(request);
-        int startPosition = Math.max(1, request.getStartPosition() - overlap);
+        int startPosition = Math.max(DEFAULT_START_POSITION, request.getStartPosition() - overlap);
         int endPosition = Math.min(chromosome.getSize(), request.getEndPosition() + overlap);
 
         final List<Motif> searchResult =
@@ -202,7 +204,7 @@ public class MotifSearchManager {
         final int pageSize = request.getPageSize() == null || request.getPageSize() <= 0
                 ? defaultPageSize
                 : request.getPageSize();
-        final int start = request.getStartPosition() == null ? 1 : request.getStartPosition();
+        final int start = request.getStartPosition() == null ? DEFAULT_START_POSITION : request.getStartPosition();
         final int end = request.getEndPosition() == null ? chromosome.getSize() : request.getEndPosition();
 
         final Set<Motif> result = new LinkedHashSet<>();
