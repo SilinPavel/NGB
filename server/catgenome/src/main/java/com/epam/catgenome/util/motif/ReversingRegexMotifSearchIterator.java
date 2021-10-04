@@ -48,12 +48,10 @@ public class ReversingRegexMotifSearchIterator implements Iterator<Motif> {
                                              final int start, final boolean includeSequence) {
 
         final String sequence = new String(seq);
-        positiveMatcher = Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex), Pattern.CASE_INSENSITIVE)
-                .matcher(sequence);
-        negativeMatcher = Pattern.compile(
-                        IupacRegexConverter.convertIupacToComplementReversedRegex(iupacRegex),
-                        Pattern.CASE_INSENSITIVE)
-                .matcher(sequence);
+        positiveMatcher = Pattern.compile(IupacRegexConverter.convertIupacToRegex(iupacRegex),
+                        Pattern.CASE_INSENSITIVE).matcher(sequence);
+        negativeMatcher = Pattern.compile(IupacRegexConverter.convertIupacToComplementReversedRegex(iupacRegex),
+                        Pattern.CASE_INSENSITIVE).matcher(sequence);
         this.contig = contig;
         this.offset = start;
         this.includeSequence = includeSequence;

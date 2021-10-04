@@ -282,6 +282,14 @@ public final class MessagesConstants {
     public static final String ERROR_POSITION_OUT_OF_RANGE = "error.position.out.of.range";
     public static final String ERROR_REFERENCE_SEQUENCE_READING = "error.reference.sequence.reading";
     public static final String ERROR_WRONG_CHROMOSOME_ID = "error.wrong.chromosome.id";
+    public static final String ERROR_UNEXPECTED_SEARCH_TYPE = "error.unexpected.search.type";
+    public static final String ERROR_EMPTY_SEARCH_TYPE = "error.empty.search.type";
+    public static final String ERROR_EMPTY_MOTIF = "error.empty.motif";
+    public static final String ERROR_EMPTY_GENOME_ID = "error.empty.genome.id";
+    public static final String ERROR_EMPTY_CHROMOSOME_ID = "error.empty.chromosome.id";
+    public static final String ERROR_INVALID_START_END = "error.invalid.start.end";
+    public static final String ERROR_EMPTY_START = "error.empty.start";
+    public static final String ERROR_EMPTY_END = "error.empty.end";
 
     private MessagesConstants() {
         // No-op
