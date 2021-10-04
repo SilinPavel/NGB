@@ -169,7 +169,7 @@ public class MotifSearchIterator implements Iterator<Motif> {
             case LOWERCASE_N:
                 return CAPITAL_N;
             default:
-                throw new IllegalStateException("Not supported nucleotide: " + (char)nucleotide);
+                throw new IllegalStateException("Not supported nucleotide: " + (char) nucleotide);
         }
     }
 
