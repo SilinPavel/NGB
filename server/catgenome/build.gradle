@@ -27,7 +27,7 @@ loadConfiguration()
 
 def loadConfiguration() {
     def profile = hasProperty("profile") ? profile : "dev"
-    def database = hasProperty("database") ? database : "h2"
+    def database = hasProperty("database") ? database : "postgres"
     def buildNumber =  hasProperty("buildNumber") ? buildNumber : ""
     project.ext.setProperty("profile", profile)
     project.ext.setProperty("database", database)

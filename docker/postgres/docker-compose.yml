@@ -1,0 +1,14 @@
+version: "3.9"
+
+services:
+  postgres:
+    container_name: catgenomedb
+    image: postgres:9.4-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: "ngb_test"
+      POSTGRES_USER: "catgenome"
+      POSTGRES_PASSWORD: "catgenome"
+    ports:
+      - "5432:5432"
+

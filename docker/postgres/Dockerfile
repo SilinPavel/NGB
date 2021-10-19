@@ -1,0 +1,6 @@
+FROM library/postgres
+ENV POSTGRES_USER catgenome
+ENV POSTGRES_PASSWORD catgenome
+ENV POSTGRES_DB ngb_test
+
+EXPOSE 5432
