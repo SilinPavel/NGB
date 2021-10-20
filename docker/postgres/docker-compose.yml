@@ -11,4 +11,3 @@ services:
       POSTGRES_PASSWORD: "catgenome"
     ports:
       - "5432:5432"
-
