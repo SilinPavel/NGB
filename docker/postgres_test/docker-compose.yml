@@ -22,6 +22,16 @@
 # SOFTWARE.
 #
 
-server.index.cache.enabled=false
+version: "3.9"
 
-security.default.admin=admin@admin.com
+services:
+  postgres:
+    container_name: catgenomedb
+    image: postgres:9.6.3
+    restart: always
+    environment:
+      POSTGRES_DB: "ngb_test"
+      POSTGRES_USER: "catgenome"
+      POSTGRES_PASSWORD: "catgenome"
+    ports:
+      - "5432:5432"
