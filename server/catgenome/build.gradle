@@ -396,7 +396,7 @@ jacocoTestReport {
 }
 
 dockerCompose {
-    useComposeFiles = ["../../docker/postgres/docker-compose.yml"]
+    useComposeFiles = ["../../docker/postgres_test/docker-compose.yml"]
     startedServices = ['postgres']
     projectName = 'NGB'
 }
